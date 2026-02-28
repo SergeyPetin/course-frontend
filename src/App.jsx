@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 
-
-
 function Header() {
   const [userRole, setUserRole] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
 
-
-
+  // Проверка токена при загрузке
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
     if (token) {
@@ -20,10 +22,49 @@ function Header() {
     }
   }, []);
 
-
-
   const canCreateCourse = userRole === 'AUTHOR' || userRole === 'ADMIN';
-
+    
+    const handleAuth = async (e) => {
+  e.preventDefault();
+  const API_URL = 'https://course-platform-production-1eb5.up.railway.app';
+  
+  try {
+    const endpoint = isLogin ? '/auth/login' : '/auth/register';
+    const body = isLogin 
+      ? { email, password }
+      : { email, fullName, password };
+    
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      localStorage.setItem('jwtToken', data.token);
+      
+      // ✅ ИСПРАВЛЕНО: роль из токена или AUTHOR по умолчанию
+      try {
+        const payload = JSON.parse(atob(data.token.split('.')[1]));
+        setUserRole(payload.role || 'AUTHOR');
+      } catch (e) {
+        setUserRole('AUTHOR'); // fallback
+      }
+      
+      setShowAuthModal(false);
+      setEmail(''); 
+      setPassword(''); 
+      setFullName('');
+      alert('✅ Авторизация успешна!');
+    } else {
+      alert(data.error || 'Ошибка авторизации');
+    }
+  } catch (error) {
+    alert('❌ Сервер недоступен');
+  }
+};
 
 
   return (
@@ -53,13 +94,13 @@ function Header() {
         }}>
           CourseHub
         </Link>
-       
+        
         <nav style={{ display: 'flex', gap: 32, fontSize: 14 }}>
           <Link to="/" style={{ color: '#e5e7eb', textDecoration: 'none' }}>Курсы</Link>
           <Link to="/about" style={{ color: '#9ca3af', textDecoration: 'none' }}>О нас</Link>
         </nav>
-       
-               <div style={{ display: 'flex', gap: 12 }}>
+        
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           {canCreateCourse && (
             <Link to="/create-course" style={{
               background: 'linear-gradient(135deg, #10b981, #059669)',
@@ -79,99 +120,114 @@ function Header() {
             </Link>
           )}
           
-          <button style={{
-            background: 'transparent',
-            border: '1px solid #475569',
-            color: '#e5e7eb',
-            padding: '8px 20px',
-            borderRadius: 999,
-            fontSize: 14,
-            cursor: 'pointer'
-          }}>
-            Войти
-          </button>
-          <button style={{
-            background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
-            border: 'none',
-            color: 'white',
-            padding: '8px 20px',
-            borderRadius: 999,
-            fontSize: 14,
-            fontWeight: 500,
-            cursor: 'pointer'
-          }}>
-            Регистрация
-          </button>
+          {userRole ? (
+            <span style={{ color: '#e5e7eb', fontSize: 14 }}>👤 {email}</span>
+          ) : (
+            <button 
+              onClick={() => setShowAuthModal(true)}
+              style={{
+                background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+                border: 'none',
+                color: 'white',
+                padding: '8px 20px',
+                borderRadius: 999,
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: 'pointer'
+              }}
+            >
+              Войти / Регистрация
+            </button>
+          )}
         </div>
       </div>
+
+      {/* МОДАЛКА АВТОРИЗАЦИИ */}
+      {showAuthModal && (
+        <div 
+          className="modal-overlay" 
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex',
+            alignItems: 'center', justifyContent: 'center'
+          }}
+          onClick={() => setShowAuthModal(false)}
+        >
+          <div 
+            className="modal-content" 
+            style={{
+              background: '#020617', padding: '32px', borderRadius: '16px',
+              maxWidth: '400px', width: '90%', maxHeight: '90vh', overflowY: 'auto'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 style={{ margin: '0 0 20px 0', color: 'white' }}>
+              {isLogin ? 'Войти' : 'Регистрация'}
+            </h2>
+            <form onSubmit={handleAuth}>
+              <input 
+                placeholder="Email" 
+                value={email} 
+                onChange={e => setEmail(e.target.value)}
+                style={{
+                  width: '100%', padding: '12px', margin: '8px 0', border: 'none',
+                  borderRadius: '8px', background: '#1e293b', color: 'white'
+                }}
+                required 
+              />
+              {!isLogin && (
+                <input 
+                  placeholder="Полное имя" 
+                  value={fullName} 
+                  onChange={e => setFullName(e.target.value)}
+                  style={{
+                    width: '100%', padding: '12px', margin: '8px 0', border: 'none',
+                    borderRadius: '8px', background: '#1e293b', color: 'white'
+                  }}
+                  required 
+                />
+              )}
+              <input 
+                type="password" 
+                placeholder="Пароль" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)}
+                style={{
+                  width: '100%', padding: '12px', margin: '8px 0', border: 'none',
+                  borderRadius: '8px', background: '#1e293b', color: 'white'
+                }}
+                required 
+              />
+              <button 
+                type="submit"
+                style={{
+                  width: '100%', padding: '12px', margin: '8px 0', border: 'none',
+                  borderRadius: '8px', background: '#3b82f6', color: 'white',
+                  fontWeight: 500, cursor: 'pointer'
+                }}
+              >
+                {isLogin ? 'Войти' : 'Зарегистрироваться'}
+              </button>
+            </form>
+            <button 
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setEmail(''); setPassword(''); setFullName('');
+              }}
+              style={{
+                width: '100%', padding: '12px', margin: '8px 0', border: 'none',
+                borderRadius: '8px', background: 'transparent', color: '#60a5fa',
+                fontWeight: 500, cursor: 'pointer'
+              }}
+            >
+              {isLogin ? 'Нет аккаунта? Регистрация' : 'Уже есть аккаунт? Войти'}
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
-
-
-
-function CourseCard({ course }) {
-  return (
-    <div
-      style={{
-        background: '#020617',
-        borderRadius: 16,
-        padding: 20,
-        boxShadow: '0 10px 25px rgba(15,23,42,0.8)',
-        border: '1px solid rgba(148,163,184,0.2)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-        cursor: 'pointer',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        MozUserSelect: 'none',
-        msUserSelect: 'none'
-      }}
-      onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
-      onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-    >
-      <div>
-        <div style={{ fontSize: 14, color: '#38bdf8', marginBottom: 8 }}>Новинка · Backend</div>
-        <h2 style={{ fontSize: 20, marginBottom: 8, color: '#e5e7eb' }}>{course.title}</h2>
-        <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 12, minHeight: 40 }}>
-          {course.description || 'Современный практический курс с проектами и домашними заданиями.'}
-        </p>
-        {course.author && (
-          <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>
-            Автор: {course.author.fullName || course.author.email}
-          </div>
-        )}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-        <div>
-          <div style={{ fontSize: 12, color: '#6b7280' }}>Стоимость</div>
-          <div style={{ fontSize: 18, fontWeight: 600, color: '#22c55e' }}>{course.price} ₽</div>
-        </div>
-        <Link
-          to={`/courses/${course.id}`}
-          style={{
-            background: 'linear-gradient(135deg, #38bdf8 0%, #6366f1 50%, #a855f7 100%)',
-            border: 'none',
-            color: 'white',
-            padding: '10px 16px',
-            borderRadius: 999,
-            fontSize: 14,
-            fontWeight: 500,
-            cursor: 'pointer',
-            boxShadow: '0 8px 20px rgba(56,189,248,0.4)',
-            textDecoration: 'none'
-          }}
-        >
-          Ознакомиться с курсом
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-
 
 function Home({ courses, loading }) {
   return (
