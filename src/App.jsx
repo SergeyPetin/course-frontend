@@ -185,7 +185,10 @@ function AuthPage() {
       color: 'white',
       fontWeight: '600',
       fontSize: '16px',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      outline: 'none',
+boxSizing: 'border-box'
+
     }}
   />
 
@@ -205,7 +208,10 @@ function AuthPage() {
         color: 'white',
         fontWeight: '600',
         fontSize: '16px',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        outline: 'none',
+boxSizing: 'border-box'
+
       }}
     />
   )}  {/* ✅ Только ЭТА скобка */}
@@ -226,7 +232,10 @@ function AuthPage() {
       color: 'white',
       fontWeight: '600',
       fontSize: '16px',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      outline: 'none',
+boxSizing: 'border-box'
+
     }}
   />
 
@@ -235,8 +244,8 @@ function AuthPage() {
     disabled={loading}
     style={{
       width: '100%', 
-      padding: '16px 24px',  // ✅ 24px как у input
-      margin: '8px 0',       // ✅ 8px как у input
+      padding: '16px 24px',
+      margin: '8px 0',
       border: 'none',
       borderRadius: '12px', 
       background: loading ? '#475569' : '#3b82f6', 
