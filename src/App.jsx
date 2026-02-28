@@ -1,13 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
-
 function Header() {
   const [userRole, setUserRole] = useState(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const navigate = useNavigate(); // ✅ ДОБАВЛЕНО
 
   // Проверка токена при загрузке
   useEffect(() => {
@@ -16,6 +10,7 @@ function Header() {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         setUserRole(payload.role);
+        setEmail(payload.email || 'User'); // ✅ ПОКАЗЫВАЕМ EMAIL
       } catch (e) {
         console.log('Invalid token');
       }
@@ -23,49 +18,6 @@ function Header() {
   }, []);
 
   const canCreateCourse = userRole === 'AUTHOR' || userRole === 'ADMIN';
-    
-    const handleAuth = async (e) => {
-  e.preventDefault();
-  const API_URL = 'https://course-platform-production-1eb5.up.railway.app';
-  
-  try {
-    const endpoint = isLogin ? '/auth/login' : '/auth/register';
-    const body = isLogin 
-      ? { email, password }
-      : { email, fullName, password };
-    
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    
-    const data = await response.json();
-    
-    if (response.ok) {
-      localStorage.setItem('jwtToken', data.token);
-      
-      // ✅ ИСПРАВЛЕНО: роль из токена или AUTHOR по умолчанию
-      try {
-        const payload = JSON.parse(atob(data.token.split('.')[1]));
-        setUserRole(payload.role || 'AUTHOR');
-      } catch (e) {
-        setUserRole('AUTHOR'); // fallback
-      }
-      
-      setShowAuthModal(false);
-      setEmail(''); 
-      setPassword(''); 
-      setFullName('');
-      alert('✅ Авторизация успешна!');
-    } else {
-      alert(data.error || 'Ошибка авторизации');
-    }
-  } catch (error) {
-    alert('❌ Сервер недоступен');
-  }
-};
-
 
   return (
     <header style={{
@@ -124,7 +76,7 @@ function Header() {
             <span style={{ color: '#e5e7eb', fontSize: 14 }}>👤 {email}</span>
           ) : (
             <button 
-              onClick={() => setShowAuthModal(true)}
+              onClick={() => navigate('/auth')}  // ✅ ✅ ✅ ИЗМЕНЕНО!
               style={{
                 background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
                 border: 'none',
@@ -141,100 +93,145 @@ function Header() {
           )}
         </div>
       </div>
+    </header>
+  );
+}
 
-      {/* МОДАЛКА АВТОРИЗАЦИИ */}
-{showAuthModal && (
-  <div 
-    style={{
-      position: 'fixed', 
-      top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(0,0,0,0.8)', 
-      zIndex: 1000, 
+function AuthPage() {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleAuth = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const API_URL = 'https://course-platform-production-1eb5.up.railway.app';
+    
+    try {
+      const endpoint = isLogin ? '/auth/login' : '/auth/register';
+      const body = isLogin ? { email, password } : { email, fullName, password };
+      
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        localStorage.setItem('jwtToken', data.token);
+        navigate('/');  // ✅ РЕДИРЕКТ НА ГЛАВНУЮ
+        alert('✅ Авторизация успешна!');
+      } else {
+        alert(data.error || 'Ошибка авторизации');
+      }
+    } catch (error) {
+      alert('❌ Сервер недоступен');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{
+      padding: '40px 20px',
+      background: '#0f172a',
+      minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center'
-    }}
-    onClick={() => setShowAuthModal(false)}
-  >
-    <div 
-      style={{
-        background: '#020617', 
-        padding: '32px', 
-        borderRadius: '16px',
-        maxWidth: '400px', 
-        width: '90%', 
-        maxHeight: '90vh', 
-        overflowY: 'auto',
-        margin: '20px'
-      }}
-      onClick={e => e.stopPropagation()}
-    >
-
-            <h2 style={{ margin: '0 0 20px 0', color: 'white' }}>
-              {isLogin ? 'Войти' : 'Регистрация'}
-            </h2>
-            <form onSubmit={handleAuth}>
-              <input 
-                placeholder="Email" 
-                value={email} 
-                onChange={e => setEmail(e.target.value)}
-                style={{
-                  width: '100%', padding: '12px', margin: '8px 0', border: 'none',
-                  borderRadius: '8px', background: '#1e293b', color: 'white'
-                }}
-                required 
-              />
-              {!isLogin && (
-                <input 
-                  placeholder="Полное имя" 
-                  value={fullName} 
-                  onChange={e => setFullName(e.target.value)}
-                  style={{
-                    width: '100%', padding: '12px', margin: '8px 0', border: 'none',
-                    borderRadius: '8px', background: '#1e293b', color: 'white'
-                  }}
-                  required 
-                />
-              )}
-              <input 
-                type="password" 
-                placeholder="Пароль" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)}
-                style={{
-                  width: '100%', padding: '12px', margin: '8px 0', border: 'none',
-                  borderRadius: '8px', background: '#1e293b', color: 'white'
-                }}
-                required 
-              />
-              <button 
-                type="submit"
-                style={{
-                  width: '100%', padding: '12px', margin: '8px 0', border: 'none',
-                  borderRadius: '8px', background: '#3b82f6', color: 'white',
-                  fontWeight: 500, cursor: 'pointer'
-                }}
-              >
-                {isLogin ? 'Войти' : 'Зарегистрироваться'}
-              </button>
-            </form>
-            <button 
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setEmail(''); setPassword(''); setFullName('');
-              }}
-              style={{
-                width: '100%', padding: '12px', margin: '8px 0', border: 'none',
-                borderRadius: '8px', background: 'transparent', color: '#60a5fa',
-                fontWeight: 500, cursor: 'pointer'
-              }}
-            >
-              {isLogin ? 'Нет аккаунта? Регистрация' : 'Уже есть аккаунт? Войти'}
-            </button>
-          </div>
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: 400,
+        background: '#020617',
+        padding: '2.5rem',
+        borderRadius: 20,
+        border: '1px solid rgba(148,163,184,0.2)',
+        boxShadow: '0 40px 100px rgba(0,0,0,0.7)'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <h1 style={{
+            fontSize: '1.875rem',
+            color: '#e5e7eb',
+            fontWeight: 700,
+            margin: 0
+          }}>
+            {isLogin ? 'Войти' : 'Регистрация'}
+          </h1>
         </div>
-      )}
-    </header>
+
+        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <input 
+            placeholder="Email" 
+            type="email"
+            value={email} 
+            onChange={e => setEmail(e.target.value)}
+            required 
+            style={{
+              width: '100%', padding: '14px 16px', border: 'none',
+              borderRadius: 12, background: '#1e293b', color: 'white',
+              fontSize: 16
+            }}
+          />
+          {!isLogin && (
+            <input 
+              placeholder="Полное имя" 
+              value={fullName} 
+              onChange={e => setFullName(e.target.value)}
+              required 
+              style={{
+                width: '100%', padding: '14px 16px', border: 'none',
+                borderRadius: 12, background: '#1e293b', color: 'white',
+                fontSize: 16
+              }}
+            />
+          )}
+          <input 
+            type="password" 
+            placeholder="Пароль" 
+            value={password} 
+            onChange={e => setPassword(e.target.value)}
+            required 
+            style={{
+              width: '100%', padding: '14px 16px', border: 'none',
+              borderRadius: 12, background: '#1e293b', color: 'white',
+              fontSize: 16
+            }}
+          />
+          <button 
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%', padding: '16px', border: 'none',
+              borderRadius: 12, background: loading ? '#475569' : '#3b82f6', 
+              color: 'white', fontWeight: 600, cursor: 'pointer'
+            }}
+          >
+            {loading ? 'Загрузка...' : (isLogin ? 'Войти' : 'Зарегистрироваться')}
+          </button>
+        </form>
+
+        <button 
+          type="button"
+          onClick={() => {
+            setIsLogin(!isLogin);
+            setEmail(''); setPassword(''); setFullName('');
+          }}
+          style={{
+            width: '100%', padding: '12px', marginTop: '1rem',
+            border: 'none', borderRadius: 12, background: 'transparent', 
+            color: '#60a5fa', fontWeight: 500, cursor: 'pointer'
+          }}
+        >
+          {isLogin ? 'Нет аккаунта? Регистрация' : 'Уже есть аккаунт? Войти'}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -264,8 +261,6 @@ function Home({ courses, loading }) {
     </div>
   );
 }
-
-
 
 function CourseDetails() {
   const { id } = useParams();
@@ -890,6 +885,7 @@ function App() {
       }}>
         <Header />
         <Routes>
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/" element={<Home courses={courses} loading={loading} />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
           <Route path="/create-course" element={<CreateCoursePage />} />
