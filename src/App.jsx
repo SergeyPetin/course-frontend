@@ -176,17 +176,16 @@ function AuthPage() {
   onChange={e => setEmail(e.target.value)}
   required 
   style={{
-    width: '320px',
-    height: '56px',
-    padding: '0',
-    margin: '0',
-    border: 'none',
-    borderRadius: '12px', 
-    background: '#1e293b', 
-    color: 'white', 
-    fontWeight: '600', 
-    fontSize: '16px',
-    display: 'block'
+   width: '100%', 
+    padding: '16px 20px',
+    margin: '0',
+    border: 'none',
+    borderRadius: 12, 
+    background: '#1e293b', 
+    color: 'white', 
+    fontWeight: 600, 
+    fontSize: 16,
+    display: 'block'
   }}
 />
 
@@ -197,17 +196,16 @@ function AuthPage() {
     onChange={e => setFullName(e.target.value)}
     required 
     style={{
-      width: '320px',
-      height: '56px',
-      padding: '0',
-      margin: '0', 
-      border: 'none',
-      borderRadius: '12px', 
-      background: '#1e293b', 
-      color: 'white', 
-      fontWeight: '600', 
-      fontSize: '16px',
-      display: 'block'
+      width: '100%', 
+    padding: '16px 20px',
+    margin: '0',
+    border: 'none',
+    borderRadius: 12, 
+    background: '#1e293b', 
+    color: 'white', 
+    fontWeight: 600, 
+    fontSize: 16,
+    display: 'block'
     }}
   />
 )}
@@ -219,17 +217,16 @@ function AuthPage() {
   onChange={e => setPassword(e.target.value)}
   required 
   style={{
-    width: '320px',
-    height: '56px',
-    padding: '0',
-    margin: '0', 
-    border: 'none',
-    borderRadius: '12px', 
-    background: '#1e293b', 
-    color: 'white', 
-    fontWeight: '600', 
-    fontSize: '16px',
-    display: 'block'
+    width: '100%', 
+    padding: '16px 20px',
+    margin: '0',
+    border: 'none',
+    borderRadius: 12, 
+    background: '#1e293b', 
+    color: 'white', 
+    fontWeight: 600, 
+    fontSize: 16,
+    display: 'block'
   }}
 />
 
