@@ -168,84 +168,85 @@ function AuthPage() {
           </h1>
         </div>
 
-        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <input 
-  placeholder="Email" 
-  type="email"
-  value={email} 
-  onChange={e => setEmail(e.target.value)}
-  required 
-  style={{
-   width: '100%', 
-    padding: '16px 20px',
-    margin: '0',
-    border: 'none',
-    borderRadius: 12, 
-    background: '#1e293b', 
-    color: 'white', 
-    fontWeight: 600, 
-    fontSize: 16,
-    display: 'block'
-  }}
-/>
-
-{!isLogin && (
+<form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
   <input 
-    placeholder="Полное имя" 
-    value={fullName} 
-    onChange={e => setFullName(e.target.value)}
+    placeholder="Email" 
+    type="email"
+    value={email} 
+    onChange={e => setEmail(e.target.value)}
     required 
     style={{
-      width: '100%', 
-    padding: '16px 20px',
-    margin: '0',
-    border: 'none',
-    borderRadius: 12, 
-    background: '#1e293b', 
-    color: 'white', 
-    fontWeight: 600, 
-    fontSize: 16,
-    display: 'block'
+      width: '100%',
+      padding: '16px 24px',
+      margin: '8px 0',
+      border: 'none',
+      borderRadius: '12px',
+      background: '#1e293b',
+      color: 'white',
+      fontWeight: '600',
+      fontSize: '16px',
+      cursor: 'pointer'
     }}
   />
-)}
 
-<input 
-  type="password" 
-  placeholder="Пароль" 
-  value={password} 
-  onChange={e => setPassword(e.target.value)}
-  required 
-  style={{
-    width: '100%', 
-    padding: '16px 20px',
-    margin: '0',
-    border: 'none',
-    borderRadius: 12, 
-    background: '#1e293b', 
-    color: 'white', 
-    fontWeight: 600, 
-    fontSize: 16,
-    display: 'block'
-  }}
-/>
+  {!isLogin && (
+    <input 
+      placeholder="Полное имя" 
+      value={fullName} 
+      onChange={e => setFullName(e.target.value)}
+      required 
+      style={{
+        width: '100%',
+        padding: '16px 24px',
+        margin: '8px 0',
+        border: 'none',
+        borderRadius: '12px',
+        background: '#1e293b',
+        color: 'white',
+        fontWeight: '600',
+        fontSize: '16px',
+        cursor: 'pointer'
+      }}
+    />
+  )}  {/* ✅ Только ЭТА скобка */}
 
-<button 
-  type="submit"
-  disabled={loading}
-  style={{
-    width: '100%', 
-    padding: '16px 20px',
-    margin: '0',
-    border: 'none',
-    borderRadius: 12, 
-    background: loading ? '#475569' : '#3b82f6', 
-    color: 'white', 
-    fontWeight: 600, 
-    fontSize: 16,
-    cursor: 'pointer'
-  }}
->
+  <input 
+    type="password" 
+    placeholder="Пароль" 
+    value={password} 
+    onChange={e => setPassword(e.target.value)}
+    required 
+    style={{
+      width: '100%',
+      padding: '16px 24px',
+      margin: '8px 0',
+      border: 'none',
+      borderRadius: '12px',
+      background: '#1e293b',
+      color: 'white',
+      fontWeight: '600',
+      fontSize: '16px',
+      cursor: 'pointer'
+    }}
+  />
+
+  <button 
+    type="submit"
+    disabled={loading}
+    style={{
+      width: '100%', 
+      padding: '16px 24px',  // ✅ 24px как у input
+      margin: '8px 0',       // ✅ 8px как у input
+      border: 'none',
+      borderRadius: '12px', 
+      background: loading ? '#475569' : '#3b82f6', 
+      color: 'white', 
+      fontWeight: '600', 
+      fontSize: '16px',
+      cursor: 'pointer'
+    }}
+  >
+
 
             {loading ? 'Загрузка...' : (isLogin ? 'Войти' : 'Зарегистрироваться')}
           </button>
