@@ -169,22 +169,24 @@ function AuthPage() {
         </div>
 
         <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-         <input 
+        <input 
   placeholder="Email" 
   type="email"
   value={email} 
   onChange={e => setEmail(e.target.value)}
   required 
   style={{
-    width: '100%', 
-    padding: '16px 20px',
+    width: '320px',
+    height: '56px',
+    padding: '0',
     margin: '0',
     border: 'none',
-    borderRadius: 12, 
+    borderRadius: '12px', 
     background: '#1e293b', 
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 500
+    color: 'white', 
+    fontWeight: '600', 
+    fontSize: '16px',
+    display: 'block'
   }}
 />
 
@@ -195,15 +197,17 @@ function AuthPage() {
     onChange={e => setFullName(e.target.value)}
     required 
     style={{
-      width: '100%', 
-      padding: '16px 20px',
-      margin: '0',
+      width: '320px',
+      height: '56px',
+      padding: '0',
+      margin: '0', 
       border: 'none',
-      borderRadius: 12, 
+      borderRadius: '12px', 
       background: '#1e293b', 
-      color: 'white',
-      fontSize: 16,
-      fontWeight: 500
+      color: 'white', 
+      fontWeight: '600', 
+      fontSize: '16px',
+      display: 'block'
     }}
   />
 )}
@@ -215,15 +219,17 @@ function AuthPage() {
   onChange={e => setPassword(e.target.value)}
   required 
   style={{
-    width: '100%', 
-    padding: '16px 20px',
-    margin: '0',
+    width: '320px',
+    height: '56px',
+    padding: '0',
+    margin: '0', 
     border: 'none',
-    borderRadius: 12, 
+    borderRadius: '12px', 
     background: '#1e293b', 
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 500
+    color: 'white', 
+    fontWeight: '600', 
+    fontSize: '16px',
+    display: 'block'
   }}
 />
 
