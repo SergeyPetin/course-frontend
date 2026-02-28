@@ -143,24 +143,33 @@ function Header() {
       </div>
 
       {/* МОДАЛКА АВТОРИЗАЦИИ */}
-      {showAuthModal && (
-        <div 
-          className="modal-overlay" 
-          style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex',
-            alignItems: 'center', justifyContent: 'center'
-          }}
-          onClick={() => setShowAuthModal(false)}
-        >
-          <div 
-            className="modal-content" 
-            style={{
-              background: '#020617', padding: '32px', borderRadius: '16px',
-              maxWidth: '400px', width: '90%', maxHeight: '90vh', overflowY: 'auto'
-            }}
-            onClick={e => e.stopPropagation()}
-          >
+{showAuthModal && (
+  <div 
+    style={{
+      position: 'fixed', 
+      top: 0, left: 0, right: 0, bottom: 0,
+      background: 'rgba(0,0,0,0.8)', 
+      zIndex: 1000, 
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}
+    onClick={() => setShowAuthModal(false)}
+  >
+    <div 
+      style={{
+        background: '#020617', 
+        padding: '32px', 
+        borderRadius: '16px',
+        maxWidth: '400px', 
+        width: '90%', 
+        maxHeight: '90vh', 
+        overflowY: 'auto',
+        margin: '20px'
+      }}
+      onClick={e => e.stopPropagation()}
+    >
+
             <h2 style={{ margin: '0 0 20px 0', color: 'white' }}>
               {isLogin ? 'Войти' : 'Регистрация'}
             </h2>
