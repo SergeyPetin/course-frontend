@@ -114,24 +114,25 @@ const handleAuth = async (e) => {
   setLoading(true);
 
   try {
+    const endpoint = '/users';  // ← ВОТ ЭТО ИЗМЕНИ!
     const body = isLogin 
       ? { email, password } 
-      : { email, fullName, password, role: 'USER' }; 
-    
-    const response = await fetch(`${API_URL}/users`, {
+      : { email, fullName, password };
+
+    const response = await fetch(`${API_URL}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    
-    const data = await response.json();
-    
+
     if (response.ok) {
+      const data = await response.json();
       localStorage.setItem('jwtToken', data.token);
       navigate('/');
       alert('✅ Авторизация успешна!');
     } else {
-      alert(data.error || 'Ошибка авторизации');
+      const errorText = await response.text();
+      alert(`Ошибка ${response.status}`);
     }
   } catch (error) {
     alert('❌ Сервер недоступен');
@@ -139,7 +140,6 @@ const handleAuth = async (e) => {
     setLoading(false);
   }
 };
-
 
   return (
     <div style={{
