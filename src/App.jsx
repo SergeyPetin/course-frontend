@@ -109,36 +109,37 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleAuth = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+const handleAuth = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
+  try {
+    const body = isLogin 
+      ? { email, password } 
+      : { email, fullName, password, role: 'USER' }; 
     
-    try {
-      const endpoint = isLogin ? '/auth/login' : '/auth/register';
-      const body = isLogin ? { email, password } : { email, fullName, password };
-      
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        localStorage.setItem('jwtToken', data.token);
-        navigate('/');  // ✅ РЕДИРЕКТ НА ГЛАВНУЮ
-        alert('✅ Авторизация успешна!');
-      } else {
-        alert(data.error || 'Ошибка авторизации');
-      }
-    } catch (error) {
-      alert('❌ Сервер недоступен');
-    } finally {
-      setLoading(false);
+    const response = await fetch(`${API_URL}/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      localStorage.setItem('jwtToken', data.token);
+      navigate('/');
+      alert('✅ Авторизация успешна!');
+    } else {
+      alert(data.error || 'Ошибка авторизации');
     }
-  };
+  } catch (error) {
+    alert('❌ Сервер недоступен');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div style={{
