@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
+const API_URL = import.meta.env.VITE_API_URL || 'https://course-platform-production-1eb5.up.railway.app';
 
 function Header() {
   const [userRole, setUserRole] = useState(null);
@@ -111,7 +112,7 @@ function AuthPage() {
   const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const API_URL = 'https://course-platform-production-1eb5.up.railway.app';
+
     
     try {
       const endpoint = isLogin ? '/auth/login' : '/auth/register';
@@ -316,7 +317,7 @@ function CourseDetails() {
 
 
   useEffect(() => {
-    fetch(`/courses/${id}`)
+    fetch(`${API_URL}/courses/${id}`)
       .then(response => response.json())
       .then(data => {
         setCourse(data);
@@ -611,7 +612,7 @@ function CreateCoursePage() {
 
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch('/courses', {
+      const response = await fetch(`${API_URL}/courses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -873,7 +874,7 @@ function App() {
 
   useEffect(() => {
     const loadCourses = () => {
-      fetch('/courses?page=0&size=20&sortBy=title')
+      fetch(`${API_URL}/courses?page=0&size=20&sortBy=title`)
         .then(response => response.json())
         .then(data => {
           console.log('🔥 API DATA:', data);
