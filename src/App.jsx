@@ -114,7 +114,7 @@ const handleAuth = async (e) => {
   setLoading(true);
 
   try {
-    const endpoint = '/users';  // ← ВОТ ЭТО ИЗМЕНИ!
+    const endpoint = '/users';
     const body = isLogin 
       ? { email, password } 
       : { email, fullName, password };
