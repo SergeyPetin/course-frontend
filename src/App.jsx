@@ -1,7 +1,7 @@
 // build bump
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
-const API_URL = import.meta.env.VITE_API_URL || 'https://course-platform-production-1eb5.up.railway.app';
+const API_URL = 'https://course-platform-production-1eb5.up.railway.app';
 
 function Header() {
   const [userRole, setUserRole] = useState(null);
