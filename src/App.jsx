@@ -81,7 +81,7 @@ function Header() {
             <span style={{ color: '#e5e7eb', fontSize: 14 }}>👤 {email}</span>
           ) : (
             <button 
-              onClick={() => navigate('/auth')}  // ✅ ✅ ✅ ИЗМЕНЕНО!
+              onClick={() => navigate('/auth')}
               style={{
                 background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
                 border: 'none',
@@ -115,7 +115,7 @@ const handleAuth = async (e) => {
   setLoading(true);
 
   try {
-    const endpoint = '/users';
+    const endpoint = isLogin ? '/auth/users' : '/auth/register';
     const body = isLogin 
       ? { email, password } 
       : { email, fullName, password };
