@@ -4,26 +4,49 @@ import CourseCard from './components/CourseCard';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 const API_URL = 'https://course-platform-production-1eb5.up.railway.app';
 
+function parseJwt(token) {
+  if (!token) return null;
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+
+    // base64url -> base64
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+
+    const json = atob(padded);
+    return JSON.parse(json);
+  } catch (e) {
+    console.error('JWT parse error:', e);
+    return null;
+  }
+}
+
 function Header() {
   const [userRole, setUserRole] = useState(null);
   const [email, setEmail] = useState('');
-  const navigate = useNavigate(); // ✅ ДОБАВЛЕНО
+  const navigate = useNavigate();
 
   useEffect(() => {
-  const token = localStorage.getItem('jwtToken');
-  if (token) {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      setUserRole(payload.role);
-      setEmail(payload.sub || payload.email || 'User');
-    } catch (e) {
-      console.log('Invalid token');
-    }
-  }
-}, []);
+    const token = localStorage.getItem('jwtToken');
+    const payload = parseJwt(token);
 
+    if (payload) {
+      setUserRole(payload.role || null);
+      // sub в твоём JWT = email
+      setEmail(payload.sub || payload.email || 'User');
+    } else {
+      setUserRole(null);
+      setEmail('');
+    }
+  }, []);
 
   const canCreateCourse = userRole === 'AUTHOR' || userRole === 'ADMIN';
+
+  const handleLogout = () => {
+    localStorage.removeItem('jwtToken');
+    window.location.href = '/auth'; // полный выход и переход на страницу логина
+  };
 
   return (
     <header style={{
@@ -52,12 +75,12 @@ function Header() {
         }}>
           CourseHub
         </Link>
-        
+
         <nav style={{ display: 'flex', gap: 32, fontSize: 14 }}>
           <Link to="/" style={{ color: '#e5e7eb', textDecoration: 'none' }}>Курсы</Link>
           <Link to="/about" style={{ color: '#9ca3af', textDecoration: 'none' }}>О нас</Link>
         </nav>
-        
+
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           {canCreateCourse && (
             <Link to="/create-course" style={{
@@ -77,11 +100,28 @@ function Header() {
               + Создать курс
             </Link>
           )}
-          
+
           {userRole ? (
-            <span style={{ color: '#e5e7eb', fontSize: 14 }}>👤 {email}</span>
+            <>
+              <span style={{ color: '#e5e7eb', fontSize: 14 }}>👤 {email}</span>
+              <button
+                onClick={handleLogout}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(148,163,184,0.4)',
+                  color: '#e5e7eb',
+                  padding: '6px 14px',
+                  borderRadius: 999,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: 'pointer'
+                }}
+              >
+                Выйти
+              </button>
+            </>
           ) : (
-            <button 
+            <button
               onClick={() => navigate('/auth')}
               style={{
                 background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
@@ -103,6 +143,7 @@ function Header() {
   );
 }
 
+
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -111,13 +152,14 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+
 const handleAuth = async (e) => {
   e.preventDefault();
   setLoading(true);
 
   try {
     const endpoint = isLogin ? '/auth/login' : '/auth/register';
-    const body = isLogin 
+    const body = isLogin
       ? { email, password }
       : { email, fullName, password };
 
@@ -132,10 +174,14 @@ const handleAuth = async (e) => {
 
       if (isLogin && data.token) {
         localStorage.setItem('jwtToken', data.token);
+        alert('✅ Авторизация успешна!');
+        window.location.href = '/';        // <– важный момент
+      } else if (!isLogin) {
+        alert('✅ Регистрация успешна! Теперь войдите.');
+        navigate('/auth');                 // регистрация без автологина
+      } else {
+        alert('Ответ сервера без токена');
       }
-
-      navigate('/');
-      alert('✅ Авторизация успешна!');
     } else {
       const errorText = await response.text();
       alert(`Ошибка ${response.status}`);
@@ -146,6 +192,7 @@ const handleAuth = async (e) => {
     setLoading(false);
   }
 };
+
 
 
   return (
