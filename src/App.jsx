@@ -9,19 +9,19 @@ function Header() {
   const [email, setEmail] = useState('');
   const navigate = useNavigate(); // ✅ ДОБАВЛЕНО
 
-  // Проверка токена при загрузке
   useEffect(() => {
-    const token = localStorage.getItem('jwtToken');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        setUserRole(payload.role);
-        setEmail(payload.email || 'User'); // ✅ ПОКАЗЫВАЕМ EMAIL
-      } catch (e) {
-        console.log('Invalid token');
-      }
+  const token = localStorage.getItem('jwtToken');
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      setUserRole(payload.role);
+      setEmail(payload.sub || payload.email || 'User');
+    } catch (e) {
+      console.log('Invalid token');
     }
-  }, []);
+  }
+}, []);
+
 
   const canCreateCourse = userRole === 'AUTHOR' || userRole === 'ADMIN';
 
