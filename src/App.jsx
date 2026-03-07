@@ -160,9 +160,9 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-
 const handleAuth = async (e) => {
   e.preventDefault();
+  console.log('HANDLE_AUTH CALLED', { isLogin, email });
   setLoading(true);
 
   try {
@@ -171,11 +171,15 @@ const handleAuth = async (e) => {
       ? { email, password }
       : { email, fullName, password };
 
+    console.log('BEFORE FETCH', { endpoint, body });
+
     const response = await fetch(`${API_URL}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
+
+    console.log('AFTER FETCH, STATUS:', response.status);
 
     if (response.ok) {
       const data = await response.json();
@@ -206,9 +210,6 @@ const handleAuth = async (e) => {
     setLoading(false);
   }
 };
-
-
-
 
   return (
     <div style={{
