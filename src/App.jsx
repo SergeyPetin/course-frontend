@@ -116,9 +116,9 @@ const handleAuth = async (e) => {
   setLoading(true);
 
   try {
-    const endpoint = isLogin ? '/auth/users' : '/auth/register';
+    const endpoint = isLogin ? '/auth/login' : '/auth/register';
     const body = isLogin 
-      ? { email, password } 
+      ? { email, password }
       : { email, fullName, password };
 
     const response = await fetch(`${API_URL}${endpoint}`, {
@@ -129,7 +129,11 @@ const handleAuth = async (e) => {
 
     if (response.ok) {
       const data = await response.json();
-      localStorage.setItem('jwtToken', data.token);
+
+      if (isLogin && data.token) {
+        localStorage.setItem('jwtToken', data.token);
+      }
+
       navigate('/');
       alert('✅ Авторизация успешна!');
     } else {
@@ -142,6 +146,7 @@ const handleAuth = async (e) => {
     setLoading(false);
   }
 };
+
 
   return (
     <div style={{
