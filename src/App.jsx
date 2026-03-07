@@ -28,18 +28,26 @@ function Header() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('jwtToken');
-    const payload = parseJwt(token);
+  const token = localStorage.getItem('jwtToken');
 
-    if (payload) {
-      setUserRole(payload.role || null);
-      // sub в твоём JWT = email
-      setEmail(payload.sub || payload.email || 'User');
-    } else {
-      setUserRole(null);
-      setEmail('');
-    }
-  }, []);
+  // Если токен отсутствует или равен строке "undefined" — считаем, что пользователь не залогинен
+  if (!token || token === 'undefined') {
+    setUserRole(null);
+    setEmail('');
+    return;
+  }
+
+  const payload = parseJwt(token);
+
+  if (payload) {
+    setUserRole(payload.role || null);
+    setEmail(payload.sub || payload.email || 'User');
+  } else {
+    setUserRole(null);
+    setEmail('');
+  }
+}, []);
+
 
   const canCreateCourse = userRole === 'AUTHOR' || userRole === 'ADMIN';
 
@@ -171,27 +179,34 @@ const handleAuth = async (e) => {
 
     if (response.ok) {
       const data = await response.json();
+      console.log('LOGIN/REGISTER RESPONSE:', data);
 
-      if (isLogin && data.token) {
+      if (isLogin) {
+        if (!data.token) {
+          alert('Сервер не вернул токен, авторизация не удалась');
+          return;
+        }
+
         localStorage.setItem('jwtToken', data.token);
         alert('✅ Авторизация успешна!');
-        window.location.href = '/';        // <– важный момент
-      } else if (!isLogin) {
-        alert('✅ Регистрация успешна! Теперь войдите.');
-        navigate('/auth');                 // регистрация без автологина
+        window.location.href = '/';
       } else {
-        alert('Ответ сервера без токена');
+        alert('✅ Регистрация успешна! Теперь войдите.');
+        navigate('/auth');
       }
     } else {
       const errorText = await response.text();
+      console.error('LOGIN ERROR:', response.status, errorText);
       alert(`Ошибка ${response.status}`);
     }
   } catch (error) {
+    console.error('NETWORK ERROR:', error);
     alert('❌ Сервер недоступен');
   } finally {
     setLoading(false);
   }
 };
+
 
 
 
