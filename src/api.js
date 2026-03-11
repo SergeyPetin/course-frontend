@@ -1,41 +1,45 @@
 import axios from 'axios';
 
-export const API = 'https://course-platform-production.up.railway.app';
+const API_BASE_URL = 'https://course-platform-production.up.railway.app/api';
 
-// Интерсептор токена
-axios.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+export const api = axios.create({
+  baseURL: API_BASE_URL,
 });
 
-// Auth
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 export const loginApi = async (email, password) => {
-  const response = await axios.post(`${API}/auth/login`, { email, password });
+  const response = await api.post('/auth/login', { email, password });
   const { token, userId, email: userEmail, role } = response.data;
   localStorage.setItem('token', token);
   return { userId, userEmail, role };
 };
 
 export const registerApi = async (email, password, fullName) => {
-  const response = await axios.post(`${API}/auth/register`, { 
-    email, password, fullName 
-  });
+  const response = await api.post('/auth/register', { email, password, fullName });
   const { token } = response.data;
   localStorage.setItem('token', token);
   return response.data;
 };
 
-// Courses
-export const getCourses = () => axios.get(`${API}/courses`);
+export const getCourses = () => api.get('/courses');
 export const createCourse = (title, description, price) => 
-  axios.post(`${API}/courses`, { title, description, price });
-export const getCourse = (id) => axios.get(`${API}/courses/${id}`);
+  api.post('/courses', { title, description, price });
+export const getCourse = (id) => api.get(`/courses/${id}`);
 
-// Logout
 export const logout = () => {
   localStorage.removeItem('token');
-  delete axios.defaults.headers.common['Authorization'];
 };
+
+export const healthCheck = () => api.get('/health');
+
+export default api;
