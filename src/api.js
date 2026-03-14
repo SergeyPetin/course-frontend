@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = 'https://course-platform-production.up.railway.app/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -20,13 +20,13 @@ api.interceptors.request.use(
 export const loginApi = async (email, password) => {
   const response = await api.post('/auth/login', { email, password });
   const { token, userId, email: userEmail, role } = response.data;
-  localStorage.setItem('token', token);
+    localStorage.setItem('token', token);
   return { userId, userEmail, role };
 };
 
 export const registerApi = async (email, password, fullName) => {
-  const response = await api.post('/auth/register', { email, password, fullName });
-  const { token } = response.data;
+   const response = await api.post('/auth/register', { email, password, fullName });
+    const { token } = response.data;
   localStorage.setItem('token', token);
   return response.data;
 };
@@ -34,6 +34,7 @@ export const registerApi = async (email, password, fullName) => {
 export const getCourses = () => api.get('/courses');
 export const createCourse = (title, description, price) => 
   api.post('/courses', { title, description, price });
+
 export const getCourse = (id) => api.get(`/courses/${id}`);
 
 export const logout = () => {
