@@ -1,26 +1,60 @@
+// build bump
 import React, { useState, useEffect } from 'react';
+import CourseCard from './components/CourseCard';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
+const API_URL = 'https://course-platform-production.up.railway.app';
 
+function parseJwt(token) {
+  if (!token) return null;
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+
+    // base64url -> base64
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+
+    const json = atob(padded);
+    return JSON.parse(json);
+  } catch (e) {
+    console.error('JWT parse error:', e);
+    return null;
+  }
+}
 
 function Header() {
   const [userRole, setUserRole] = useState(null);
-
+  const [email, setEmail] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('jwtToken');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        setUserRole(payload.role);
-      } catch (e) {
-        console.log('Invalid token');
-      }
-    }
-  }, []);
+  const token = localStorage.getItem('jwtToken');
+
+  // Если токен отсутствует или равен строке "undefined" — считаем, что пользователь не залогинен
+  if (!token || token === 'undefined') {
+    setUserRole(null);
+    setEmail('');
+    return;
+  }
+
+  const payload = parseJwt(token);
+
+  if (payload) {
+    setUserRole(payload.role || null);
+    setEmail(payload.sub || payload.email || 'User');
+  } else {
+    setUserRole(null);
+    setEmail('');
+  }
+}, []);
 
 
   const canCreateCourse = userRole === 'AUTHOR' || userRole === 'ADMIN';
 
+  const handleLogout = () => {
+    localStorage.removeItem('jwtToken');
+    window.location.href = '/auth'; // полный выход и переход на страницу логина
+  };
 
   return (
     <header style={{
@@ -49,15 +83,16 @@ function Header() {
         }}>
           CourseHub
         </Link>
-       
+
         <nav style={{ display: 'flex', gap: 32, fontSize: 14 }}>
           <Link to="/" style={{ color: '#e5e7eb', textDecoration: 'none' }}>Курсы</Link>
           <Link to="/about" style={{ color: '#9ca3af', textDecoration: 'none' }}>О нас</Link>
         </nav>
-       
-        <div style={{ display: 'flex', gap: 12 }}>
-          <Link to="/create-course" style={{
-  background: 'linear-gradient(135deg, #10b981, #059669)',
+
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          {canCreateCourse && (
+            <Link to="/create-course" style={{
+              background: 'linear-gradient(135deg, #10b981, #059669)',
               border: 'none',
               color: 'white',
               padding: '8px 20px',
@@ -72,30 +107,44 @@ function Header() {
             }}>
               + Создать курс
             </Link>
-          
-          <button style={{
-            background: 'transparent',
-            border: '1px solid #475569',
-            color: '#e5e7eb',
-            padding: '8px 20px',
-            borderRadius: 999,
-            fontSize: 14,
-            cursor: 'pointer'
-          }}>
-            Войти
-          </button>
-          <button style={{
-            background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
-            border: 'none',
-            color: 'white',
-            padding: '8px 20px',
-            borderRadius: 999,
-            fontSize: 14,
-            fontWeight: 500,
-            cursor: 'pointer'
-          }}>
-            Регистрация
-          </button>
+          )}
+
+          {userRole ? (
+            <>
+              <span style={{ color: '#e5e7eb', fontSize: 14 }}>👤 {email}</span>
+              <button
+                onClick={handleLogout}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(148,163,184,0.4)',
+                  color: '#e5e7eb',
+                  padding: '6px 14px',
+                  borderRadius: 999,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: 'pointer'
+                }}
+              >
+                Выйти
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => navigate('/auth')}
+              style={{
+                background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+                border: 'none',
+                color: 'white',
+                padding: '8px 20px',
+                borderRadius: 999,
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: 'pointer'
+              }}
+            >
+              Войти / Регистрация
+            </button>
+          )}
         </div>
       </div>
     </header>
@@ -103,67 +152,205 @@ function Header() {
 }
 
 
-function CourseCard({ course }) {
+function AuthPage() {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+const handleAuth = async (e) => {
+  e.preventDefault();
+  console.log('HANDLE_AUTH CALLED', { isLogin, email });
+  setLoading(true);
+
+  try {
+    const endpoint = isLogin ? '/auth/login' : '/auth/register';
+    const body = isLogin
+      ? { email, password }
+      : { email, fullName, password };
+
+    console.log('BEFORE FETCH', { endpoint, body });
+
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    console.log('AFTER FETCH, STATUS:', response.status);
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('LOGIN/REGISTER RESPONSE:', data);
+
+      if (isLogin) {
+        if (!data.token) {
+          alert('Сервер не вернул токен, авторизация не удалась');
+          return;
+        }
+
+        localStorage.setItem('jwtToken', data.token);
+        alert('✅ Авторизация успешна!');
+        window.location.href = '/';
+      } else {
+        alert('✅ Регистрация успешна! Теперь войдите.');
+        navigate('/auth');
+      }
+    } else {
+      const errorText = await response.text();
+      console.error('LOGIN ERROR:', response.status, errorText);
+      alert(`Ошибка ${response.status}`);
+    }
+  } catch (error) {
+    console.error('NETWORK ERROR:', error);
+    alert('❌ Сервер недоступен');
+  } finally {
+    setLoading(false);
+  }
+};
+
   return (
-    <div
-      style={{
+    <div style={{
+      padding: '40px 20px',
+      background: '#0f172a',
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: 400,
         background: '#020617',
-        borderRadius: 16,
-        padding: 20,
-        boxShadow: '0 10px 25px rgba(15,23,42,0.8)',
+        padding: '2.5rem',
+        borderRadius: 20,
         border: '1px solid rgba(148,163,184,0.2)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-        cursor: 'pointer',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        MozUserSelect: 'none',
-        msUserSelect: 'none'
-      }}
-      onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
-      onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-    >
-      <div>
-        <div style={{ fontSize: 14, color: '#38bdf8', marginBottom: 8 }}>Новинка · Backend</div>
-        <h2 style={{ fontSize: 20, marginBottom: 8, color: '#e5e7eb' }}>{course.title}</h2>
-        <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 12, minHeight: 40 }}>
-          {course.description || 'Современный практический курс с проектами и домашними заданиями.'}
-        </p>
-        {course.author && (
-          <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>
-            Автор: {course.author.fullName || course.author.email}
-          </div>
-        )}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-        <div>
-          <div style={{ fontSize: 12, color: '#6b7280' }}>Стоимость</div>
-          <div style={{ fontSize: 18, fontWeight: 600, color: '#22c55e' }}>{course.price} ₽</div>
+        boxShadow: '0 40px 100px rgba(0,0,0,0.7)'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <h1 style={{
+            fontSize: '1.875rem',
+            color: '#e5e7eb',
+            fontWeight: 700,
+            margin: 0
+          }}>
+            {isLogin ? 'Войти' : 'Регистрация'}
+          </h1>
         </div>
-        <Link
-          to={`/courses/${course.id}`}
+
+<form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+  <input 
+    placeholder="Email" 
+    type="email"
+    value={email} 
+    onChange={e => setEmail(e.target.value)}
+    required 
+    style={{
+      width: '100%',
+      padding: '16px 24px',
+      margin: '8px 0',
+      border: 'none',
+      borderRadius: '12px',
+      background: '#1e293b',
+      color: 'white',
+      fontWeight: '600',
+      fontSize: '16px',
+      cursor: 'pointer',
+      outline: 'none',
+boxSizing: 'border-box'
+
+    }}
+  />
+
+  {!isLogin && (
+    <input 
+      placeholder="Полное имя" 
+      value={fullName} 
+      onChange={e => setFullName(e.target.value)}
+      required 
+      style={{
+        width: '100%',
+        padding: '16px 24px',
+        margin: '8px 0',
+        border: 'none',
+        borderRadius: '12px',
+        background: '#1e293b',
+        color: 'white',
+        fontWeight: '600',
+        fontSize: '16px',
+        cursor: 'pointer',
+        outline: 'none',
+boxSizing: 'border-box'
+
+      }}
+    />
+  )}  {/* ✅ Только ЭТА скобка */}
+
+  <input 
+    type="password" 
+    placeholder="Пароль" 
+    value={password} 
+    onChange={e => setPassword(e.target.value)}
+    required 
+    style={{
+      width: '100%',
+      padding: '16px 24px',
+      margin: '8px 0',
+      border: 'none',
+      borderRadius: '12px',
+      background: '#1e293b',
+      color: 'white',
+      fontWeight: '600',
+      fontSize: '16px',
+      cursor: 'pointer',
+      outline: 'none',
+boxSizing: 'border-box'
+
+    }}
+  />
+
+  <button 
+    type="submit"
+    disabled={loading}
+    style={{
+      width: '100%', 
+      padding: '16px 24px',
+      margin: '8px 0',
+      border: 'none',
+      borderRadius: '12px', 
+      background: loading ? '#475569' : '#3b82f6', 
+      color: 'white', 
+      fontWeight: '600', 
+      fontSize: '16px',
+      cursor: 'pointer'
+    }}
+  >
+
+
+            {loading ? 'Загрузка...' : (isLogin ? 'Войти' : 'Зарегистрироваться')}
+          </button>
+        </form>
+
+        <button 
+          type="button"
+          onClick={() => {
+            setIsLogin(!isLogin);
+            setEmail(''); setPassword(''); setFullName('');
+          }}
           style={{
-            background: 'linear-gradient(135deg, #38bdf8 0%, #6366f1 50%, #a855f7 100%)',
-            border: 'none',
-            color: 'white',
-            padding: '10px 16px',
-            borderRadius: 999,
-            fontSize: 14,
-            fontWeight: 500,
-            cursor: 'pointer',
-            boxShadow: '0 8px 20px rgba(56,189,248,0.4)',
-            textDecoration: 'none'
+            width: '100%', padding: '12px', marginTop: '1rem',
+            border: 'none', borderRadius: 12, background: 'transparent', 
+            color: '#60a5fa', fontWeight: 500, cursor: 'pointer'
           }}
         >
-          Ознакомиться с курсом
-        </Link>
+          {isLogin ? 'Нет аккаунта? Регистрация' : 'Уже есть аккаунт? Войти'}
+        </button>
       </div>
     </div>
   );
 }
-
 
 function Home({ courses, loading }) {
   return (
@@ -192,7 +379,6 @@ function Home({ courses, loading }) {
   );
 }
 
-
 function CourseDetails() {
   const { id } = useParams();
   const [course, setCourse] = useState(null);
@@ -200,8 +386,9 @@ function CourseDetails() {
   const [showPaymentModal, setShowPaymentModal] = useState(false); // ✅ ЗДЕСЬ!
 
 
+
   useEffect(() => {
-    fetch(`https://course-platform-production.up.railway.app/courses/${id}`)
+    fetch(`${API_URL}/courses/${id}`)
       .then(response => response.json())
       .then(data => {
         setCourse(data);
@@ -214,8 +401,10 @@ function CourseDetails() {
   }, [id]);
 
 
+
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#9ca3af' }}>Загрузка...</div>;
   if (!course) return <div style={{ padding: 40, textAlign: 'center', color: '#9ca3af' }}>Курс не найден</div>;
+
 
 
   return (
@@ -267,6 +456,7 @@ function CourseDetails() {
               </button>
 
 
+
               {/* ✅ УРОКИ */}
               {course.lessons && course.lessons.length > 0 && (
                 <div style={{ marginTop: 40 }}>
@@ -306,6 +496,7 @@ function CourseDetails() {
               )}
 
 
+
               {/* Пустое состояние уроков */}
               {(!course.lessons || course.lessons.length === 0) && (
                 <div style={{ marginTop: 40, padding: 24, background: '#020617', borderRadius: 12, textAlign: 'center' }}>
@@ -313,6 +504,7 @@ function CourseDetails() {
                 </div>
               )}
             </div>
+
 
 
             <div style={{
@@ -336,6 +528,7 @@ function CourseDetails() {
           </div>
         </div>
       </div>
+
 
 
       {/* ✅ MODAL ОПЛАТЫ */}
@@ -382,6 +575,7 @@ function CourseDetails() {
             </div>
 
 
+
             <div style={{ display: 'grid', gap: 12 }}>
               {/* 🇷🇺 РОССИЯ */}
               <button style={{
@@ -402,6 +596,7 @@ function CourseDetails() {
               </button>
 
 
+
               <button style={{
                 padding: '16px',
                 background: '#007bff',
@@ -420,6 +615,7 @@ function CourseDetails() {
               </button>
 
 
+
               <button style={{
                 padding: '16px',
                 background: '#28a745',
@@ -436,6 +632,7 @@ function CourseDetails() {
               >
                 💰 ЮMoney
               </button>
+
 
 
               {/* 🌍 МЕЖДУНАРОДНЫЙ */}
@@ -466,6 +663,7 @@ function CourseDetails() {
   );
 }
 
+
 function CreateCoursePage() {
   const [formData, setFormData] = useState({
     title: '',
@@ -477,13 +675,15 @@ function CreateCoursePage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
+
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch('https://course-platform-production.up.railway.app/courses', {
+      const response = await fetch(`${API_URL}/courses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -494,6 +694,7 @@ function CreateCoursePage() {
           price: Number(formData.price) // конвертируем в число для backend
         })
       });
+
 
       if (response.ok) {
         navigate('/');
@@ -511,6 +712,7 @@ function CreateCoursePage() {
     }
   };
 
+
   return (
     <div style={{
       padding: '40px 20px',
@@ -521,15 +723,16 @@ function CreateCoursePage() {
       justifyContent: 'center'
     }}>
       <div style={{
-        width: '100%',
-        maxWidth: '480',
-        margin: '0 auto',
-        background: '#020617',
-        padding: '2.5rem', // ✅ РАВНОМЕРНЫЕ отступы внутри
-        borderRadius: 20,
-        border: '1px solid rgba(148,163,184,0.2)',
-        boxShadow: '0 40px 100px rgba(0,0,0,0.7)'
-      }}>
+  width: '100%',
+  maxWidth: 480,
+  margin: '0 auto',
+  background: '#020617',
+  padding: '2.5rem',
+  borderRadius: 20,
+  border: '1px solid rgba(148,163,184,0.2)',
+  boxShadow: '0 40px 100px rgba(0,0,0,0.7)'
+}}>
+
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -553,6 +756,7 @@ function CreateCoursePage() {
             ×
           </Link>
         </div>
+
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Название */}
@@ -579,6 +783,7 @@ function CreateCoursePage() {
             />
           </div>
 
+
           {/* Описание */}
           <div>
             <label style={{ display: 'block', color: '#9ca3af', fontSize: 14, marginBottom: 8 }}>
@@ -603,6 +808,7 @@ function CreateCoursePage() {
               onBlur={e => e.target.style.borderColor = 'rgba(148,163,184,0.3)'}
             />
           </div>
+
 
           {/* ЦЕНА — БЕЗ ШАГА! */}
           <div>
@@ -634,6 +840,7 @@ function CreateCoursePage() {
             />
           </div>
 
+
           {/* Обложка */}
           <div>
             <label style={{ display: 'block', color: '#9ca3af', fontSize: 14, marginBottom: 8 }}>
@@ -658,6 +865,7 @@ function CreateCoursePage() {
             />
           </div>
 
+
           {/* Промо видео */}
           <div>
             <label style={{ display: 'block', color: '#9ca3af', fontSize: 14, marginBottom: 8 }}>
@@ -681,6 +889,7 @@ function CreateCoursePage() {
               onBlur={e => e.target.style.borderColor = 'rgba(148,163,184,0.3)'}
             />
           </div>
+
 
           {/* Кнопки */}
           <div style={{ display: 'flex', gap: 12 }}>
@@ -727,14 +936,16 @@ function CreateCoursePage() {
   );
 }
 
+
 function App() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
 
+
   useEffect(() => {
     const loadCourses = () => {
-      fetch('https://course-platform-production.up.railway.app/courses?page=0&size=20&sortBy=title')
+      fetch(`${API_URL}/courses?page=0&size=20&sortBy=title`)
         .then(response => response.json())
         .then(data => {
           console.log('🔥 API DATA:', data);
@@ -757,7 +968,9 @@ function App() {
     };
 
 
+
     loadCourses();
+
 
 
     const handleCourseCreated = () => {
@@ -767,12 +980,14 @@ function App() {
     };
 
 
+
     window.addEventListener('courseCreated', handleCourseCreated);
    
     return () => {
       window.removeEventListener('courseCreated', handleCourseCreated);
     };
   }, []);
+
 
 
   return (
@@ -787,6 +1002,7 @@ function App() {
       }}>
         <Header />
         <Routes>
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/" element={<Home courses={courses} loading={loading} />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
           <Route path="/create-course" element={<CreateCoursePage />} />
@@ -795,7 +1011,6 @@ function App() {
       </div>
     </Router>
   );
+  
 }
-
-
 export default App;
