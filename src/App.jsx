@@ -403,11 +403,21 @@ function Home({ courses, loading }) {
 
 function CourseDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
+
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+  // Информация о текущем пользователе
+  const [userRole, setUserRole] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
+  const [isAuthor, setIsAuthor] = useState(false);
+
+  // 1) Загружаем курс
   useEffect(() => {
+    setLoading(true);
+
     fetch(`${API_URL}/courses/${id}`)
       .then((response) => response.json())
       .then((data) => {
@@ -419,6 +429,84 @@ function CourseDetails() {
         setLoading(false);
       });
   }, [id]);
+
+  // 2) Считываем JWT и понимаем — это автор курса или нет
+  useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+
+    if (!token || token === 'undefined') {
+      setUserRole(null);
+      setUserEmail(null);
+      setIsAuthor(false);
+      return;
+    }
+
+    const payload = parseJwt(token);
+
+    if (!payload) {
+      setUserRole(null);
+      setUserEmail(null);
+      setIsAuthor(false);
+      return;
+    }
+
+    const role = payload.role || null;
+    const email = payload.sub || payload.email || null;
+
+    setUserRole(role);
+    setUserEmail(email);
+
+    if (course) {
+      const courseAuthorEmail =
+        (course.author && course.author.email) || course.authorEmail || null;
+
+      const isOwner =
+        !!courseAuthorEmail && !!email && courseAuthorEmail === email;
+
+      // Автор может управлять своим курсом, админ – любым
+      const canManage = role === 'ADMIN' || isOwner;
+      setIsAuthor(canManage);
+    } else {
+      setIsAuthor(false);
+    }
+  }, [course]);
+
+  const handleDelete = async () => {
+    if (!window.confirm('Точно удалить этот курс? Это действие нельзя отменить.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('jwtToken');
+
+      const response = await fetch(`${API_URL}/courses/${id}`, {
+        method: 'DELETE',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` })
+        }
+      });
+
+      if (response.ok) {
+        alert('Курс удалён');
+        // Обновим список на главной
+        window.dispatchEvent(new CustomEvent('courseCreated'));
+        navigate('/');
+      } else {
+        const text = await response.text();
+        console.error('Ошибка удаления курса:', response.status, text);
+        alert(`Ошибка удаления: ${response.status} ${text || ''}`);
+      }
+    } catch (e) {
+      console.error('Сетевая ошибка при удалении курса', e);
+      alert('Сетевая ошибка при удалении курса');
+    }
+  };
+
+  const handleEdit = () => {
+    // Пока просто переходим на страницу формы.
+    // Следующим шагом можно будет передавать сюда course и включить режим редактирования.
+    navigate('/create-course', { state: { courseToEdit: course } });
+  };
 
   if (loading) {
     return (
@@ -461,6 +549,7 @@ function CourseDetails() {
               <div style={{ fontSize: 14, color: '#38bdf8', marginBottom: 24 }}>
                 Новинка · Backend · {course.lessons ? course.lessons.length : 0} уроков
               </div>
+
               <div
                 style={{
                   fontSize: 24,
@@ -471,6 +560,7 @@ function CourseDetails() {
               >
                 {course.price} ₽
               </div>
+
               <p
                 style={{
                   fontSize: 16,
@@ -483,39 +573,76 @@ function CourseDetails() {
               </p>
 
               {course.previewVideoUrl && (
-  <div style={{ marginBottom: 32 }}>
-    <iframe
-      width="100%"
-      height="315"
-      src={course.previewVideoUrl.replace('watch?v=', 'embed/')}
-      title="Промо видео"
-      frameBorder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowFullScreen
-      style={{ borderRadius: 12 }}
-    ></iframe>
-  </div>
-)}
+                <div style={{ marginBottom: 32 }}>
+                  <iframe
+                    width="100%"
+                    height="315"
+                    src={course.previewVideoUrl.replace('watch?v=', 'embed/')}
+                    title="Промо видео"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{ borderRadius: 12 }}
+                  ></iframe>
+                </div>
+              )}
 
+              {/* 👉 Здесь логика:
+                  - если это автор/админ — показываем Редактировать/Удалить
+                  - иначе — обычную кнопку "Купить курс" */}
+              {isAuthor ? (
+                <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+                  <button
+                    onClick={handleEdit}
+                    style={{
+                      background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+                      border: 'none',
+                      color: 'white',
+                      padding: '14px 24px',
+                      borderRadius: 12,
+                      fontSize: 15,
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ✏️ Редактировать курс
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    style={{
+                      background: '#dc2626',
+                      border: 'none',
+                      color: 'white',
+                      padding: '14px 20px',
+                      borderRadius: 12,
+                      fontSize: 15,
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🗑 Удалить
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowPaymentModal(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                    border: 'none',
+                    color: 'white',
+                    padding: '16px 32px',
+                    borderRadius: 12,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow: '0 12px 30px rgba(34,197,94,0.4)'
+                  }}
+                >
+                  Купить курс
+                </button>
+              )}
 
-              <button
-                onClick={() => setShowPaymentModal(true)}
-                style={{
-                  background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                  border: 'none',
-                  color: 'white',
-                  padding: '16px 32px',
-                  borderRadius: 12,
-                  fontSize: 16,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  boxShadow: '0 12px 30px rgba(34,197,94,0.4)'
-                }}
-              >
-                Купить курс
-              </button>
-
-              {course.lessons && course.lessons.length > 0 && (
+              {course.lessons && course.lessons.length > 0 ? (
                 <div style={{ marginTop: 40 }}>
                   <h2 style={{ fontSize: 24, color: '#e5e7eb', marginBottom: 20 }}>
                     Уроки ({course.lessons.length})
@@ -564,9 +691,7 @@ function CourseDetails() {
                     ))}
                   </div>
                 </div>
-              )}
-
-              {(!course.lessons || course.lessons.length === 0) && (
+              ) : (
                 <div
                   style={{
                     marginTop: 40,
@@ -605,7 +730,8 @@ function CourseDetails() {
         </div>
       </div>
 
-      {showPaymentModal && (
+      {/* Модалка оплаты без изменений */}
+      {showPaymentModal && !isAuthor && (
         <div
           style={{
             position: 'fixed',
