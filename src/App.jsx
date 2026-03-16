@@ -483,17 +483,20 @@ function CourseDetails() {
               </p>
 
               {course.previewVideoUrl && (
-                <div style={{ marginBottom: 32 }}>
-                  <a
-                    href={course.previewVideoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: '#38bdf8', fontSize: 16 }}
-                  >
-                    ▶️ Смотреть промо‑видео
-                  </a>
-                </div>
-              )}
+  <div style={{ marginBottom: 32 }}>
+    <iframe
+      width="100%"
+      height="315"
+      src={course.previewVideoUrl.replace('watch?v=', 'embed/')}
+      title="Промо видео"
+      frameBorder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowFullScreen
+      style={{ borderRadius: 12 }}
+    ></iframe>
+  </div>
+)}
+
 
               <button
                 onClick={() => setShowPaymentModal(true)}
