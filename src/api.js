@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'bek-production-15ec.up.railway.app';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://bek-production-15ec.up.railway.app';
+
+fetch(`${API_BASE}${endpoint}`)
+
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
