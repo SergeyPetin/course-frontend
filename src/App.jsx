@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import CourseCard from './components/CourseCard';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
-const API_URL = 'https://course-platform-production.up.railway.app';
+const API_URL = 'bek-production-15ec.up.railway.app';
 
 function parseJwt(token) {
   if (!token) return null;

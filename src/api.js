@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://course-platform-production.up.railway.app/api';
+const API_BASE_URL = 'bek-production-15ec.up.railway.app';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
