@@ -589,6 +589,7 @@ const handleDelete = async () => {
                   <iframe
                     width="100%"
                     height="315"
+                    key={`${course.id}-${course.previewVideoUrl}`}
                     src={course.previewVideoUrl.replace('watch?v=', 'embed/')}
                     title="Промо видео"
                     frameBorder="0"
@@ -927,8 +928,8 @@ function CreateCoursePage() {
         title: formData.title,
         description: formData.description,
         price: Number(formData.price),
-        coverImageUrl: formData.coverImageUrl || null,
-        previewVideoUrl: formData.previewVideoUrl || null
+        coverImageUrl: formData.coverImageUrl || '',
+        previewVideoUrl: formData.previewVideoUrl || ''
       };
 
       const response = await fetch(url, {
