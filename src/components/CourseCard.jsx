@@ -37,19 +37,19 @@ const CourseCard = ({ course }) => {
         {course.coverImageUrl ? (
           <div style={{ height: 140, marginBottom: 16, borderRadius: 12, overflow: 'hidden' }}>
             <img
-            key={`${course.id}-${course.coverImageUrl}`} 
-              src={`${course.coverImageUrl}?v=${Date.now()}`}
-              alt={course.title}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                borderRadius: 12
-              }}
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
-            />
+  key={`${course.id}-${course.coverImageUrl || 'empty'}-${Date.now()}`}
+  src={course.coverImageUrl ? `${course.coverImageUrl}?v=${Date.now()}` : ''}
+  alt={course.title}
+  style={{
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    borderRadius: 12
+  }}
+  onError={(e) => {
+    e.target.style.display = 'none';
+  }}
+/>
           </div>
         ) : (
           <div
