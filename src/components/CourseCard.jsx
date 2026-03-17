@@ -37,6 +37,7 @@ const CourseCard = ({ course }) => {
         {course.coverImageUrl ? (
           <div style={{ height: 140, marginBottom: 16, borderRadius: 12, overflow: 'hidden' }}>
             <img
+            key={`${course.id}-${course.coverImageUrl}`} 
               src={course.coverImageUrl}
               alt={course.title}
               style={{
