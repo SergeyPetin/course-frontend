@@ -472,7 +472,23 @@ function CourseDetails() {
     }
   }, [course]);
 
-  const handleDelete = async () => {
+  const handleEdit = () => {
+  // ← Передаём course в state для редактирования
+  navigate('/create-course', { 
+    state: { 
+      courseToEdit: {
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        price: course.price,
+        coverImageUrl: course.coverImageUrl,
+        previewVideoUrl: course.previewVideoUrl
+      }
+    } 
+  });
+};
+
+const handleDelete = async () => {
     if (!window.confirm('Точно удалить этот курс? Это действие нельзя отменить.')) {
       return;
     }
@@ -502,46 +518,6 @@ function CourseDetails() {
       alert('Сетевая ошибка при удалении курса');
     }
   };
-
-  const handleEdit = () => {
-  // ← Передаём course в state для редактирования
-  navigate('/create-course', { 
-    state: { 
-      courseToEdit: {
-        id: course.id,
-        title: course.title,
-        description: course.description,
-        price: course.price,
-        coverImageUrl: course.coverImageUrl,
-        previewVideoUrl: course.previewVideoUrl
-      }
-    } 
-  });
-};
-
-const handleDelete = async () => {
-  if (!window.confirm('Точно удалить этот курс?')) return;
-
-  try {
-    const token = localStorage.getItem('jwtToken');
-    const response = await fetch(`${API_URL}/courses/${id}`, {
-      method: 'DELETE',
-      headers: { ...(token && { Authorization: `Bearer ${token}` }) }
-    });
-
-    if (response.ok) {
-      // ✅ Обновляем список после удаления
-      window.dispatchEvent(new CustomEvent('courseCreated'));
-      alert('🗑️ Курс удалён!');
-      navigate('/');
-    } else {
-      const text = await response.text();
-      alert(`Ошибка: ${response.status}`);
-    }
-  } catch (e) {
-    alert('Сетевая ошибка');
-  }
-};
 
 
   if (loading) {
