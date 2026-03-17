@@ -1,7 +1,8 @@
 // build bump
 import React, { useState, useEffect } from 'react';
 import CourseCard from './components/CourseCard';
-import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
+
 
 const API_URL = 'https://bek-production-15ec.up.railway.app';
 
@@ -503,10 +504,45 @@ function CourseDetails() {
   };
 
   const handleEdit = () => {
-    // Пока просто переходим на страницу формы.
-    // Следующим шагом можно будет передавать сюда course и включить режим редактирования.
-    navigate('/create-course', { state: { courseToEdit: course } });
-  };
+  // ← Передаём course в state для редактирования
+  navigate('/create-course', { 
+    state: { 
+      courseToEdit: {
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        price: course.price,
+        coverImageUrl: course.coverImageUrl,
+        previewVideoUrl: course.previewVideoUrl
+      }
+    } 
+  });
+};
+
+const handleDelete = async () => {
+  if (!window.confirm('Точно удалить этот курс?')) return;
+
+  try {
+    const token = localStorage.getItem('jwtToken');
+    const response = await fetch(`${API_URL}/courses/${id}`, {
+      method: 'DELETE',
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) }
+    });
+
+    if (response.ok) {
+      // ✅ Обновляем список после удаления
+      window.dispatchEvent(new CustomEvent('courseCreated'));
+      alert('🗑️ Курс удалён!');
+      navigate('/');
+    } else {
+      const text = await response.text();
+      alert(`Ошибка: ${response.status}`);
+    }
+  } catch (e) {
+    alert('Сетевая ошибка');
+  }
+};
+
 
   if (loading) {
     return (
@@ -873,6 +909,7 @@ function CourseDetails() {
 }
 
 function CreateCoursePage() {
+  const location = useLocation();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -881,7 +918,25 @@ function CreateCoursePage() {
     previewVideoUrl: ''
   });
   const [loading, setLoading] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [courseId, setCourseId] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.state?.courseToEdit) {
+      const course = location.state.courseToEdit;
+      setFormData({
+        title: course.title || '',
+        description: course.description || '',
+        price: course.price || '',
+        coverImageUrl: course.coverImageUrl || '',
+        previewVideoUrl: course.previewVideoUrl || ''
+      });
+      setIsEdit(true);
+      setCourseId(course.id);
+      document.title = `Редактировать: ${course.title}`;
+    }
+  }, [location.state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -889,6 +944,8 @@ function CreateCoursePage() {
 
     try {
       const token = localStorage.getItem('jwtToken');
+      const method = isEdit ? 'PUT' : 'POST';
+      const url = isEdit ? `${API_URL}/courses/${courseId}` : `${API_URL}/courses`;
 
       const body = {
         title: formData.title,
@@ -898,8 +955,8 @@ function CreateCoursePage() {
         previewVideoUrl: formData.previewVideoUrl || null
       };
 
-      const response = await fetch(`${API_URL}/courses`, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` })
@@ -908,15 +965,14 @@ function CreateCoursePage() {
       });
 
       if (response.ok) {
-        navigate('/');
         window.dispatchEvent(new CustomEvent('courseCreated'));
+        navigate('/');
+        alert(isEdit ? '✅ Курс обновлён!' : '✅ Курс создан!');
       } else {
         const errorText = await response.text();
-        console.error('🚨 Ошибка сервера:', response.status, errorText);
         alert(`Ошибка ${response.status}: ${errorText || 'Доступ запрещён'}`);
       }
     } catch (error) {
-      console.error('🚨 Сетевая ошибка:', error);
       alert('Сервер недоступен');
     } finally {
       setLoading(false);
@@ -962,7 +1018,7 @@ function CreateCoursePage() {
               margin: 0
             }}
           >
-            Новый курс
+            {isEdit ? 'Редактировать курс' : 'Новый курс'}
           </h1>
           <Link
             to="/"
@@ -1151,7 +1207,7 @@ function CreateCoursePage() {
                 cursor: loading ? 'not-allowed' : 'pointer'
               }}
             >
-              {loading ? 'Создаём курс...' : 'Создать курс'}
+              {loading ? 'Сохраняем...' : (isEdit ? 'Сохранить изменения' : 'Создать курс')}
             </button>
             <Link
               to="/"
