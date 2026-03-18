@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import LessonPlayer from '../components/LessonPlayer'; // ← HLS ПЛЕЕР!
+import LessonPlayer from '../components/LessonPlayer';
 
 const API_URL = 'https://bek-production-15ec.up.railway.app';
 
@@ -8,12 +8,29 @@ function CourseManagePage() {
   const { id } = useParams();
   const [course, setCourse] = useState(null);
   const [lessons, setLessons] = useState([]);
-  const [newLesson, setNewLesson] = useState({ 
-    title: '', 
-    videoUrl: ''  
+  const [newLesson, setNewLesson] = useState({
+    title: '',
+    videoUrl: ''
   });
   const [loading, setLoading] = useState(false);
-  const [selectedLesson, setSelectedLesson] = useState(null); // ← ПЛЕЕР состояние!
+  const [selectedLesson, setSelectedLesson] = useState(null);
+
+  const loadLessons = async () => {
+    try {
+      const lessonsRes = await fetch(`${API_URL}/courses/${id}/lessons`);
+      const lessonsData = await lessonsRes.json();
+      const sorted = Array.isArray(lessonsData)
+        ? [...lessonsData].sort((a, b) => {
+            const orderA = a.orderNumber ?? a.id ?? 0;
+            const orderB = b.orderNumber ?? b.id ?? 0;
+            return orderA - orderB;
+          })
+        : [];
+      setLessons(sorted);
+    } catch (e) {
+      console.error('Ошибка загрузки уроков:', e);
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -21,26 +38,23 @@ function CourseManagePage() {
         const courseRes = await fetch(`${API_URL}/courses/${id}`);
         const courseData = await courseRes.json();
         setCourse(courseData);
-
-        const lessonsRes = await fetch(`${API_URL}/courses/${id}/lessons`);
-        const lessonsData = await lessonsRes.json();
-        setLessons(lessonsData);
       } catch (e) {
-        console.error('Ошибка загрузки:', e);
+        console.error('Ошибка загрузки курса:', e);
       }
+      await loadLessons();
     };
     loadData();
   }, [id]);
 
   const addLesson = async () => {
     if (!newLesson.title.trim() || !newLesson.videoUrl.trim()) return;
-    
+
     setLoading(true);
     try {
       const token = localStorage.getItem('jwtToken');
       const response = await fetch(`${API_URL}/courses/${id}/lessons`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` })
         },
@@ -49,34 +63,73 @@ function CourseManagePage() {
 
       if (response.ok) {
         setNewLesson({ title: '', videoUrl: '' });
-        const lessonsRes = await fetch(`${API_URL}/courses/${id}/lessons`);
-        const lessonsData = await lessonsRes.json();
-        setLessons(lessonsData);
+        await loadLessons();
       } else {
-        console.error('ОШИБКА:', response.status, await response.text());
+        console.error('Ошибка создания урока:', response.status, await response.text());
         alert(`Ошибка ${response.status}`);
       }
     } catch (e) {
-      console.error('ОШИБКА:', e);
+      console.error('Сетевая ошибка при создании урока:', e);
       alert('Сервер недоступен');
     } finally {
       setLoading(false);
     }
   };
 
+  const deleteLesson = async (lessonId) => {
+    if (!window.confirm('Удалить этот урок? Это действие нельзя отменить.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const response = await fetch(
+        `${API_URL}/courses/${id}/lessons/${lessonId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` })
+          }
+        }
+      );
+
+      if (response.ok || response.status === 204) {
+        setLessons((prev) => prev.filter((l) => l.id !== lessonId));
+        if (selectedLesson && selectedLesson.id === lessonId) {
+          setSelectedLesson(null);
+        }
+      } else {
+        const text = await response.text();
+        alert(`Ошибка удаления урока: ${response.status} ${text || ''}`);
+      }
+    } catch (e) {
+      console.error('Сетевая ошибка при удалении урока:', e);
+      alert('Сетевая ошибка при удалении урока');
+    }
+  };
+
   if (!course) return <div>Загрузка...</div>;
 
   return (
-    <div style={{ padding: '40px 20px', background: '#0f172a', minHeight: '100vh' }}>
+    <div
+      style={{
+        padding: '40px 20px',
+        background: '#0f172a',
+        minHeight: '100vh'
+      }}
+    >
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-        <Link to={`/courses/${id}`} style={{ 
-          color: '#38bdf8', 
-          textDecoration: 'none', 
-          display: 'inline-flex', 
-          alignItems: 'center', 
-          gap: 8,
-          marginBottom: 24 
-        }}>
+        <Link
+          to={`/courses/${id}`}
+          style={{
+            color: '#38bdf8',
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            marginBottom: 24
+          }}
+        >
           ← Назад к курсу
         </Link>
 
@@ -87,21 +140,30 @@ function CourseManagePage() {
           ID: {id} | Уроков: {lessons.length}
         </div>
 
-        {/* Форма — ТОЛЬКО 2 ПОЛЯ! */}
-        <div style={{
-          background: '#020617',
-          padding: 24,
-          borderRadius: 16,
-          border: '1px solid rgba(148,163,184,0.2)',
-          marginBottom: 32
-        }}>
-          <h3 style={{ color: '#e5e7eb', marginBottom: 16 }}>➕ Новый урок</h3>
-          
-          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '2fr 2fr auto' }}>
+        <div
+          style={{
+            background: '#020617',
+            padding: 24,
+            borderRadius: 16,
+            border: '1px solid rgba(148,163,184,0.2)',
+            marginBottom: 32
+          }}
+        >
+          <h3 style={{ color: '#e5e7eb', marginBottom: 16 }}>Новый урок</h3>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: 16,
+              gridTemplateColumns: '2fr 2fr auto'
+            }}
+          >
             <input
               placeholder="Название урока"
               value={newLesson.title}
-              onChange={e => setNewLesson({ ...newLesson, title: e.target.value })}
+              onChange={(e) =>
+                setNewLesson({ ...newLesson, title: e.target.value })
+              }
               style={{
                 padding: '12px 16px',
                 background: '#1e293b',
@@ -110,11 +172,13 @@ function CourseManagePage() {
                 color: 'white'
               }}
             />
-            
+
             <input
               placeholder="Bunny HLS ссылка (m3u8)"
               value={newLesson.videoUrl}
-              onChange={e => setNewLesson({ ...newLesson, videoUrl: e.target.value })}
+              onChange={(e) =>
+                setNewLesson({ ...newLesson, videoUrl: e.target.value })
+              }
               style={{
                 padding: '12px 16px',
                 background: '#1e293b',
@@ -123,13 +187,19 @@ function CourseManagePage() {
                 color: 'white'
               }}
             />
-            
+
             <button
               onClick={addLesson}
-              disabled={loading || !newLesson.title.trim() || !newLesson.videoUrl.trim()}
+              disabled={
+                loading ||
+                !newLesson.title.trim() ||
+                !newLesson.videoUrl.trim()
+              }
               style={{
                 padding: '12px 24px',
-                background: loading ? '#475569' : 'linear-gradient(135deg, #10b981, #059669)',
+                background: loading
+                  ? '#475569'
+                  : 'linear-gradient(135deg, #10b981, #059669)',
                 color: 'white',
                 border: 'none',
                 borderRadius: 12,
@@ -137,29 +207,32 @@ function CourseManagePage() {
                 cursor: loading ? 'not-allowed' : 'pointer'
               }}
             >
-              {loading ? 'Сохраняем...' : '➕ Добавить'}
+              {loading ? 'Сохраняем...' : 'Добавить'}
             </button>
           </div>
         </div>
 
-        {/* ✅ НОВЫЙ СПИСОК + ПЛЕЕР! */}
         <div>
           {selectedLesson ? (
-            // 🎥 ПЛЕЕР
-            <div style={{ marginTop: '24px' }}>
-              <h3 style={{ color: '#e5e7eb', marginBottom: '16px' }}>
+            <div style={{ marginTop: 24 }}>
+              <h3
+                style={{
+                  color: '#e5e7eb',
+                  marginBottom: 16
+                }}
+              >
                 ▶️ {selectedLesson.title}
               </h3>
               <LessonPlayer hlsUrl={selectedLesson.videoUrl} />
-              <button 
+              <button
                 onClick={() => setSelectedLesson(null)}
                 style={{
-                  marginTop: '16px',
+                  marginTop: 16,
                   padding: '12px 24px',
                   background: 'transparent',
                   color: '#38bdf8',
                   border: '1px solid #38bdf8',
-                  borderRadius: '8px',
+                  borderRadius: 8,
                   cursor: 'pointer'
                 }}
               >
@@ -167,62 +240,85 @@ function CourseManagePage() {
               </button>
             </div>
           ) : (
-            // 📋 СПИСОК УРОКОВ (кликабельный!)
             <div style={{ display: 'grid', gap: 12 }}>
               {lessons.length === 0 ? (
-                <div style={{ 
-                  padding: 40, 
-                  textAlign: 'center', 
-                  color: '#9ca3af',
-                  background: '#020617',
-                  borderRadius: 16
-                }}>
-                  Нет уроков. Добавьте первый! 🎥
+                <div
+                  style={{
+                    padding: 40,
+                    textAlign: 'center',
+                    color: '#9ca3af',
+                    background: '#020617',
+                    borderRadius: 16
+                  }}
+                >
+                  Нет уроков. Добавьте первый.
                 </div>
               ) : (
                 lessons.map((lesson, index) => (
-                  <div 
+                  <div
                     key={lesson.id}
                     style={{
                       padding: 20,
                       background: '#020617',
                       borderRadius: 12,
                       borderLeft: '4px solid #38bdf8',
-                      cursor: 'pointer',
-                      transition: 'background 0.2s'
-                    }}
-                    onClick={() => setSelectedLesson(lesson)}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#1e293b';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#020617';
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 16
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontWeight: 600, color: '#e5e7eb' }}>
-                          {index + 1}. {lesson.title}
-                        </div>
-                        {lesson.durationMinutes && lesson.durationMinutes > 0 && (
-                          <div style={{ color: '#9ca3af', fontSize: 14 }}>
+                    <div
+                      style={{ flex: 1, cursor: 'pointer' }}
+                      onClick={() => setSelectedLesson(lesson)}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          color: '#e5e7eb',
+                          marginBottom: 4
+                        }}
+                      >
+                        {index + 1}. {lesson.title}
+                      </div>
+                      {lesson.durationMinutes &&
+                        lesson.durationMinutes > 0 && (
+                          <div
+                            style={{
+                              color: '#9ca3af',
+                              fontSize: 14
+                            }}
+                          >
                             {lesson.durationMinutes} мин.
                           </div>
                         )}
+                      <div
+                        style={{
+                          marginTop: 6,
+                          fontSize: 12,
+                          color: '#38bdf8'
+                        }}
+                      >
+                        Нажмите, чтобы воспроизвести HLS
                       </div>
-                      <code style={{ 
-                        background: '#1e293b', 
-                        padding: '4px 8px', 
-                        borderRadius: 6, 
-                        fontSize: 12,
-                        maxWidth: 250,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        HLS готово
-                      </code>
                     </div>
+
+                    <button
+                      onClick={() => deleteLesson(lesson.id)}
+                      style={{
+                        padding: '8px 14px',
+                        background: '#dc2626',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 8,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      🗑 Удалить
+                    </button>
                   </div>
                 ))
               )}

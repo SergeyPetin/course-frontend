@@ -1,9 +1,16 @@
-// build bump
-import CourseManagePage from './components/CourseManagePage';
 import React, { useState, useEffect } from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useParams,
+  useNavigate,
+  useLocation
+} from 'react-router-dom';
+import LessonPlayer from './components/LessonPlayer';
+import CourseManagePage from './components/CourseManagePage';
 import CourseCard from './components/CourseCard';
-import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
-
 
 const API_URL = 'https://bek-production-15ec.up.railway.app';
 
@@ -13,10 +20,8 @@ function parseJwt(token) {
     const base64Url = token.split('.')[1];
     if (!base64Url) return null;
 
-    // base64url -> base64
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
-
+    const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
     const json = atob(padded);
     return JSON.parse(json);
   } catch (e) {
@@ -176,14 +181,11 @@ function AuthPage() {
 
   const handleAuth = async (e) => {
     e.preventDefault();
-    console.log('HANDLE_AUTH CALLED', { isLogin, email });
     setLoading(true);
 
     try {
       const endpoint = isLogin ? '/auth/login' : '/auth/register';
       const body = isLogin ? { email, password } : { email, fullName, password };
-
-      console.log('BEFORE FETCH', { endpoint, body });
 
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
@@ -191,11 +193,8 @@ function AuthPage() {
         body: JSON.stringify(body)
       });
 
-      console.log('AFTER FETCH, STATUS:', response.status);
-
       if (response.ok) {
         const data = await response.json();
-        console.log('LOGIN/REGISTER RESPONSE:', data);
 
         if (isLogin) {
           if (!data.token) {
@@ -212,11 +211,9 @@ function AuthPage() {
         }
       } else {
         const errorText = await response.text();
-        console.error('LOGIN ERROR:', response.status, errorText);
-        alert(`Ошибка ${response.status}`);
+        alert(`Ошибка ${response.status}${errorText ? `: ${errorText}` : ''}`);
       }
     } catch (error) {
-      console.error('NETWORK ERROR:', error);
       alert('❌ Сервер недоступен');
     } finally {
       setLoading(false);
@@ -258,7 +255,10 @@ function AuthPage() {
           </h1>
         </div>
 
-        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <form
+          onSubmit={handleAuth}
+          style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+        >
           <input
             placeholder="Email"
             type="email"
@@ -273,9 +273,8 @@ function AuthPage() {
               borderRadius: '12px',
               background: '#1e293b',
               color: 'white',
-              fontWeight: '600',
-              fontSize: '16px',
-              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 16,
               outline: 'none',
               boxSizing: 'border-box'
             }}
@@ -295,9 +294,8 @@ function AuthPage() {
                 borderRadius: '12px',
                 background: '#1e293b',
                 color: 'white',
-                fontWeight: '600',
-                fontSize: '16px',
-                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: 16,
                 outline: 'none',
                 boxSizing: 'border-box'
               }}
@@ -318,9 +316,8 @@ function AuthPage() {
               borderRadius: '12px',
               background: '#1e293b',
               color: 'white',
-              fontWeight: '600',
-              fontSize: '16px',
-              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 16,
               outline: 'none',
               boxSizing: 'border-box'
             }}
@@ -337,9 +334,9 @@ function AuthPage() {
               borderRadius: '12px',
               background: loading ? '#475569' : '#3b82f6',
               color: 'white',
-              fontWeight: '600',
-              fontSize: '16px',
-              cursor: 'pointer'
+              fontWeight: 600,
+              fontSize: 16,
+              cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >
             {loading ? 'Загрузка...' : isLogin ? 'Войти' : 'Зарегистрироваться'}
@@ -376,13 +373,32 @@ function AuthPage() {
 function Home({ courses, loading }) {
   return (
     <div style={{ padding: '40px 0' }}>
-      <div style={{ maxWidth: 960, margin: '0 auto', color: 'white', padding: '0 20px' }}>
-        <h1 style={{ fontSize: 32, marginBottom: 24, textAlign: 'center' }}>Курсы по программированию</h1>
+      <div
+        style={{
+          maxWidth: 960,
+          margin: '0 auto',
+          color: 'white',
+          padding: '0 20px'
+        }}
+      >
+        <h1
+          style={{
+            fontSize: 32,
+            marginBottom: 24,
+            textAlign: 'center'
+          }}
+        >
+          Курсы по программированию
+        </h1>
 
-        {loading && <div style={{ textAlign: 'center', padding: 40 }}>Загрузка курсов...</div>}
+        {loading && (
+          <div style={{ textAlign: 'center', padding: 40 }}>Загрузка курсов...</div>
+        )}
 
         {!loading && courses.length === 0 && (
-          <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af' }}>Нет доступных курсов</div>
+          <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af' }}>
+            Нет доступных курсов
+          </div>
         )}
 
         {!loading && courses.length > 0 && (
@@ -390,7 +406,7 @@ function Home({ courses, loading }) {
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-              gap: '24px'
+              gap: 24
             }}
           >
             {courses.map((course) => (
@@ -410,13 +426,9 @@ function CourseDetails() {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-
-  // Информация о текущем пользователе
-  const [userRole, setUserRole] = useState(null);
-  const [userEmail, setUserEmail] = useState(null);
+  const [selectedLesson, setSelectedLesson] = useState(null);
   const [isAuthor, setIsAuthor] = useState(false);
 
-  // 1) Загружаем курс
   useEffect(() => {
     setLoading(true);
 
@@ -424,6 +436,19 @@ function CourseDetails() {
       .then((response) => response.json())
       .then((data) => {
         setCourse(data);
+
+        const lessons = Array.isArray(data.lessons) ? data.lessons : [];
+        if (lessons.length > 0) {
+          const sorted = [...lessons].sort((a, b) => {
+            const orderA = a.orderNumber ?? a.id ?? 0;
+            const orderB = b.orderNumber ?? b.id ?? 0;
+            return orderA - orderB;
+          });
+          setSelectedLesson(sorted[0]);
+        } else {
+          setSelectedLesson(null);
+        }
+
         setLoading(false);
       })
       .catch((err) => {
@@ -432,65 +457,50 @@ function CourseDetails() {
       });
   }, [id]);
 
-  // 2) Считываем JWT и понимаем — это автор курса или нет
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
 
-    if (!token || token === 'undefined') {
-      setUserRole(null);
-      setUserEmail(null);
+    if (!token || token === 'undefined' || !course) {
       setIsAuthor(false);
       return;
     }
 
     const payload = parseJwt(token);
-
     if (!payload) {
-      setUserRole(null);
-      setUserEmail(null);
       setIsAuthor(false);
       return;
     }
 
     const role = payload.role || null;
     const email = payload.sub || payload.email || null;
+    const courseAuthorEmail =
+      (course.author && course.author.email) || course.authorEmail || null;
 
-    setUserRole(role);
-    setUserEmail(email);
-
-    if (course) {
-      const courseAuthorEmail =
-        (course.author && course.author.email) || course.authorEmail || null;
-
-      const isOwner =
-        !!courseAuthorEmail && !!email && courseAuthorEmail === email;
-
-      // Автор может управлять своим курсом, админ – любым
-      const canManage = role === 'ADMIN' || isOwner;
-      setIsAuthor(canManage);
-    } else {
-      setIsAuthor(false);
-    }
+    const isOwner = !!courseAuthorEmail && !!email && courseAuthorEmail === email;
+    setIsAuthor(role === 'ADMIN' || isOwner);
   }, [course]);
 
   const handleEdit = () => {
-  // ← Передаём course в state для редактирования
-  navigate('/create-course', { 
-    state: { 
-      courseToEdit: {
-        id: course.id,
-        title: course.title,
-        description: course.description,
-        price: course.price,
-        coverImageUrl: course.coverImageUrl,
-        previewVideoUrl: course.previewVideoUrl
-      }
-    } 
-  });
-};
+    if (!course) return;
 
-const handleDelete = async () => {
-    if (!window.confirm('Точно удалить этот курс? Это действие нельзя отменить.')) {
+    navigate('/create-course', {
+      state: {
+        courseToEdit: {
+          id: course.id,
+          title: course.title,
+          description: course.description,
+          price: course.price,
+          coverImageUrl: course.coverImageUrl,
+          previewVideoUrl: course.previewVideoUrl
+        }
+      }
+    });
+  };
+
+  const handleDelete = async () => {
+    if (
+      !window.confirm('Точно удалить этот курс? Это действие нельзя отменить.')
+    ) {
       return;
     }
 
@@ -506,12 +516,10 @@ const handleDelete = async () => {
 
       if (response.ok) {
         alert('Курс удалён');
-        // Обновим список на главной
         window.dispatchEvent(new CustomEvent('courseCreated'));
         navigate('/');
       } else {
         const text = await response.text();
-        console.error('Ошибка удаления курса:', response.status, text);
         alert(`Ошибка удаления: ${response.status} ${text || ''}`);
       }
     } catch (e) {
@@ -520,6 +528,14 @@ const handleDelete = async () => {
     }
   };
 
+  const sortedLessons =
+    course && Array.isArray(course.lessons)
+      ? [...course.lessons].sort((a, b) => {
+          const orderA = a.orderNumber ?? a.id ?? 0;
+          const orderB = b.orderNumber ?? b.id ?? 0;
+          return orderA - orderB;
+        })
+      : [];
 
   if (loading) {
     return (
@@ -539,8 +555,21 @@ const handleDelete = async () => {
 
   return (
     <>
-      <div style={{ padding: '40px 0', background: '#0f172a', minHeight: '100vh' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto', color: 'white', padding: '0 20px' }}>
+      <div
+        style={{
+          padding: '40px 0',
+          background: '#0f172a',
+          minHeight: '100vh'
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1000,
+            margin: '0 auto',
+            color: 'white',
+            padding: '0 20px'
+          }}
+        >
           <Link
             to="/"
             style={{
@@ -556,11 +585,33 @@ const handleDelete = async () => {
             ← Назад к курсам
           </Link>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 40, alignItems: 'start' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 320px',
+              gap: 40,
+              alignItems: 'start'
+            }}
+          >
             <div>
-              <h1 style={{ fontSize: 36, marginBottom: 16, color: '#e5e7eb' }}>{course.title}</h1>
-              <div style={{ fontSize: 14, color: '#38bdf8', marginBottom: 24 }}>
-                Новинка · Backend · {course.lessons ? course.lessons.length : 0} уроков
+              <h1
+                style={{
+                  fontSize: 36,
+                  marginBottom: 16,
+                  color: '#e5e7eb'
+                }}
+              >
+                {course.title}
+              </h1>
+
+              <div
+                style={{
+                  fontSize: 14,
+                  color: '#38bdf8',
+                  marginBottom: 24
+                }}
+              >
+                Новинка · Backend · {sortedLessons.length} уроков
               </div>
 
               <div
@@ -582,85 +633,103 @@ const handleDelete = async () => {
                   marginBottom: 32
                 }}
               >
-                {course.description || 'Подробное описание курса будет добавлено в ближайшее время.'}
+                {course.description ||
+                  'Подробное описание курса будет добавлено в ближайшее время.'}
               </p>
 
               {course.previewVideoUrl && (
                 <div style={{ marginBottom: 32 }}>
                   <iframe
                     key={`${course.id}-${course.previewVideoUrl || 'empty'}-${Date.now()}`}
-  width="100%"
-  height="315"
-  src={course.previewVideoUrl 
-    ? course.previewVideoUrl.replace('watch?v=', 'embed/') + `?v=${Date.now()}` 
-    : ''
-  }
-  title="Промо видео"
-  frameBorder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowFullScreen
-  style={{ borderRadius: 12 }}
+                    width="100%"
+                    height="315"
+                    src={
+                      course.previewVideoUrl
+                        ? course.previewVideoUrl.replace('watch?v=', 'embed/') +
+                          `?v=${Date.now()}`
+                        : ''
+                    }
+                    title="Промо видео"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{ borderRadius: 12 }}
                   ></iframe>
                 </div>
               )}
 
-              {/* 👉 Здесь логика:
-                  - если это автор/админ — показываем Редактировать/Удалить
-                  - иначе — обычную кнопку "Купить курс" */}
+              {selectedLesson && selectedLesson.videoUrl && (
+                <div style={{ marginBottom: 32 }}>
+                  <h2
+                    style={{
+                      fontSize: 20,
+                      color: '#e5e7eb',
+                      marginBottom: 12
+                    }}
+                  >
+                    Сейчас играет: {selectedLesson.title}
+                  </h2>
+                  <LessonPlayer hlsUrl={selectedLesson.videoUrl} />
+                </div>
+              )}
+
               {isAuthor ? (
-  <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-    <Link
-      to={`/courses/${course.id}/manage`}  // ← /courses/ не /course/
-      style={{
-        background: 'linear-gradient(135deg, #10b981, #059669)',
-        color: 'white',
-        padding: '14px 24px',
-        borderRadius: 12,
-        fontSize: 15,
-        fontWeight: 600,
-        textDecoration: 'none',
-        display: 'inline-flex',
-        alignItems: 'center'
-      }}
-    >
-      📋 Управление уроками
-    </Link>
-    <button
-      onClick={handleEdit}
-      style={{
-        background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
-        border: 'none',
-        color: 'white',
-        padding: '14px 24px',
-        borderRadius: 12,
-        fontSize: 15,
-        fontWeight: 600,
-        cursor: 'pointer'
-      }}
-    >
-      ✏️ Редактировать курс
-    </button>
-    <button
-      onClick={handleDelete}
-      style={{
-        background: '#dc2626',
-        border: 'none',
-        color: 'white',
-        padding: '14px 20px',
-        borderRadius: 12,
-        fontSize: 15,
-        fontWeight: 600,
-        cursor: 'pointer'
-      }}
-    >
-      🗑 Удалить
-    </button>
-  </div>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+                  <Link
+                    to={`/courses/${course.id}/manage`}
+                    style={{
+                      background:
+                        'linear-gradient(135deg, #10b981, #059669)',
+                      color: 'white',
+                      padding: '14px 24px',
+                      borderRadius: 12,
+                      fontSize: 15,
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center'
+                    }}
+                  >
+                    📋 Управление уроками
+                  </Link>
+                  <button
+                    onClick={handleEdit}
+                    style={{
+                      background:
+                        'linear-gradient(135deg, #38bdf8, #6366f1)',
+                      border: 'none',
+                      color: 'white',
+                      padding: '14px 24px',
+                      borderRadius: 12,
+                      fontSize: 15,
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ✏️ Редактировать курс
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    style={{
+                      background: '#dc2626',
+                      border: 'none',
+                      color: 'white',
+                      padding: '14px 20px',
+                      borderRadius: 12,
+                      fontSize: 15,
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🗑 Удалить
+                  </button>
+                </div>
               ) : (
                 <button
                   onClick={() => setShowPaymentModal(true)}
                   style={{
-                    background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                    background:
+                      'linear-gradient(135deg, #22c55e, #16a34a)',
                     border: 'none',
                     color: 'white',
                     padding: '16px 32px',
@@ -675,60 +744,86 @@ const handleDelete = async () => {
                 </button>
               )}
 
-              {course.lessons && course.lessons.length > 0 ? (
+              {sortedLessons.length > 0 ? (
                 <div style={{ marginTop: 40 }}>
-                  <h2 style={{ fontSize: 24, color: '#e5e7eb', marginBottom: 20 }}>
-                    Уроки ({course.lessons.length})
+                  <h2
+                    style={{
+                      fontSize: 24,
+                      color: '#e5e7eb',
+                      marginBottom: 20
+                    }}
+                  >
+                    Уроки ({sortedLessons.length})
                   </h2>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {course.lessons.map((lesson, index) => (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 12
+                    }}
+                  >
+                    {sortedLessons.map((lesson, index) => (
                       <div
                         key={lesson.id}
+                        onClick={() => setSelectedLesson(lesson)}
                         style={{
                           padding: 16,
                           background: '#020617',
                           borderRadius: 12,
-                          borderLeft: '3px solid #38bdf8'
+                          borderLeft: '3px solid #38bdf8',
+                          cursor: 'pointer',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#1e293b';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#020617';
                         }}
                       >
-                       <div
-  style={{
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  }}
->
-  <span style={{ fontWeight: 600, color: '#e5e7eb' }}>
-    {index + 1}. {lesson.title}
-  </span>
-  {lesson.durationMinutes && lesson.durationMinutes > 0 && (
-    <span style={{ color: '#6b7280', fontSize: 12 }}>
-      {lesson.durationMinutes} мин.
-    </span>
-  )}
-</div>
-{lesson.videoUrl && (
-  <div style={{ marginTop: 8 }}>
-    <span style={{ 
-      color: '#38bdf8', 
-      fontSize: 12, 
-      cursor: 'pointer',
-      display: 'block'
-    }} 
-    title={lesson.videoUrl}
-    onClick={() => {
-      alert(`HLS видео: ${lesson.videoUrl}\n\nСкопируй ссылку и вставь в плеер:\nVLC → Media → Open Network Stream`);
-    }}
-    onContextMenu={(e) => {
-      e.preventDefault();
-      navigator.clipboard.writeText(lesson.videoUrl);
-      alert('✅ HLS URL скопирован в буфер!');
-    }}
-    >
-      📹 HLS Bunny ({lesson.videoUrl.split('/').pop()?.split('.')[0] || 'видео'})
-    </span>
-  </div>
-)}
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: 600,
+                              color: '#e5e7eb'
+                            }}
+                          >
+                            {index + 1}. {lesson.title}
+                          </span>
+                          {lesson.durationMinutes &&
+                            lesson.durationMinutes > 0 && (
+                              <span
+                                style={{
+                                  color: '#6b7280',
+                                  fontSize: 12
+                                }}
+                              >
+                                {lesson.durationMinutes} мин.
+                              </span>
+                            )}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 6,
+                            fontSize: 12,
+                            color:
+                              selectedLesson &&
+                              selectedLesson.id === lesson.id
+                                ? '#22c55e'
+                                : '#9ca3af'
+                          }}
+                        >
+                          {selectedLesson &&
+                          selectedLesson.id === lesson.id
+                            ? '▶ Сейчас воспроизводится'
+                            : 'Нажмите, чтобы воспроизвести'}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -743,7 +838,9 @@ const handleDelete = async () => {
                     textAlign: 'center'
                   }}
                 >
-                  <div style={{ color: '#9ca3af', fontSize: 16 }}>Уроки скоро появятся</div>
+                  <div style={{ color: '#9ca3af', fontSize: 16 }}>
+                    Уроки скоро появятся
+                  </div>
                 </div>
               )}
             </div>
@@ -756,23 +853,44 @@ const handleDelete = async () => {
                 border: '1px solid rgba(148,163,184,0.2)'
               }}
             >
-              <h3 style={{ color: '#e5e7eb', marginBottom: 16 }}>Автор</h3>
+              <h3
+                style={{
+                  color: '#e5e7eb',
+                  marginBottom: 16
+                }}
+              >
+                Автор
+              </h3>
               {course.author ? (
                 <>
-                  <div style={{ fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      color: '#9ca3af',
+                      marginBottom: 8
+                    }}
+                  >
                     {course.author.fullName || course.author.email}
                   </div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>Инструктор</div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: '#6b7280'
+                    }}
+                  >
+                    Инструктор
+                  </div>
                 </>
               ) : (
-                <div style={{ color: '#6b7280' }}>Информация скоро появится</div>
+                <div style={{ color: '#6b7280' }}>
+                  Информация скоро появится
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Модалка оплаты без изменений */}
       {showPaymentModal && !isAuthor && (
         <div
           style={{
@@ -809,12 +927,24 @@ const handleDelete = async () => {
                 marginBottom: 24
               }}
             >
-              <h2 style={{ color: '#e5e7eb', fontSize: 24, fontWeight: 700 }}>
+              <h2
+                style={{
+                  color: '#e5e7eb',
+                  fontSize: 24,
+                  fontWeight: 700
+                }}
+              >
                 Оплата: {course.title}
               </h2>
               <button
                 onClick={() => setShowPaymentModal(false)}
-                style={{ color: '#9ca3af', fontSize: 24, cursor: 'pointer' }}
+                style={{
+                  color: '#9ca3af',
+                  fontSize: 24,
+                  cursor: 'pointer',
+                  background: 'transparent',
+                  border: 'none'
+                }}
               >
                 ×
               </button>
@@ -834,7 +964,7 @@ const handleDelete = async () => {
             <div style={{ display: 'grid', gap: 12 }}>
               <button
                 style={{
-                  padding: '16px',
+                  padding: 16,
                   background: '#f97316',
                   color: 'white',
                   border: 'none',
@@ -852,7 +982,7 @@ const handleDelete = async () => {
 
               <button
                 style={{
-                  padding: '16px',
+                  padding: 16,
                   background: '#007bff',
                   color: 'white',
                   border: 'none',
@@ -870,7 +1000,7 @@ const handleDelete = async () => {
 
               <button
                 style={{
-                  padding: '16px',
+                  padding: 16,
                   background: '#28a745',
                   color: 'white',
                   border: 'none',
@@ -886,11 +1016,24 @@ const handleDelete = async () => {
                 💰 ЮMoney
               </button>
 
-              <div style={{ paddingTop: 20, borderTop: '1px solid #374151' }}>
-                <h3 style={{ color: '#9ca3af', fontSize: 16, marginBottom: 12 }}>🇺🇸 International</h3>
+              <div
+                style={{
+                  paddingTop: 20,
+                  borderTop: '1px solid #374151'
+                }}
+              >
+                <h3
+                  style={{
+                    color: '#9ca3af',
+                    fontSize: 16,
+                    marginBottom: 12
+                  }}
+                >
+                  🇺🇸 International
+                </h3>
                 <button
                   style={{
-                    padding: '16px',
+                    padding: 16,
                     background: '#6772e5',
                     color: 'white',
                     border: 'none',
@@ -951,7 +1094,9 @@ function CreateCoursePage() {
     try {
       const token = localStorage.getItem('jwtToken');
       const method = isEdit ? 'PUT' : 'POST';
-      const url = isEdit ? `${API_URL}/courses/${courseId}` : `${API_URL}/courses`;
+      const url = isEdit
+        ? `${API_URL}/courses/${courseId}`
+        : `${API_URL}/courses`;
 
       const body = {
         title: formData.title,
@@ -976,7 +1121,11 @@ function CreateCoursePage() {
         alert(isEdit ? '✅ Курс обновлён!' : '✅ Курс создан!');
       } else {
         const errorText = await response.text();
-        alert(`Ошибка ${response.status}: ${errorText || 'Доступ запрещён'}`);
+        alert(
+          `Ошибка ${response.status}: ${
+            errorText || 'Доступ запрещён'
+          }`
+        );
       }
     } catch (error) {
       alert('Сервер недоступен');
@@ -1039,7 +1188,14 @@ function CreateCoursePage() {
           </Link>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.5rem'
+          }}
+        >
           <div>
             <label
               style={{
@@ -1054,7 +1210,9 @@ function CreateCoursePage() {
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
               required
               style={{
                 width: '100%',
@@ -1066,7 +1224,9 @@ function CreateCoursePage() {
                 fontSize: 16
               }}
               onFocus={(e) => (e.target.style.borderColor = '#38bdf8')}
-              onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.3)')}
+              onBlur={(e) =>
+                (e.target.style.borderColor = 'rgba(148,163,184,0.3)')
+              }
             />
           </div>
 
@@ -1083,7 +1243,9 @@ function CreateCoursePage() {
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               rows="4"
               style={{
                 width: '100%',
@@ -1097,7 +1259,9 @@ function CreateCoursePage() {
                 minHeight: 100
               }}
               onFocus={(e) => (e.target.style.borderColor = '#38bdf8')}
-              onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.3)')}
+              onBlur={(e) =>
+                (e.target.style.borderColor = 'rgba(148,163,184,0.3)')
+              }
             />
           </div>
 
@@ -1115,7 +1279,9 @@ function CreateCoursePage() {
             <input
               type="number"
               value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, price: e.target.value })
+              }
               min="0"
               step="1"
               placeholder="999"
@@ -1133,7 +1299,9 @@ function CreateCoursePage() {
                 e.target.style.borderColor = '#22c55e';
                 e.target.style.outline = 'none';
               }}
-              onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.3)')}
+              onBlur={(e) =>
+                (e.target.style.borderColor = 'rgba(148,163,184,0.3)')
+              }
             />
           </div>
 
@@ -1152,7 +1320,12 @@ function CreateCoursePage() {
               type="url"
               placeholder="https://example.com/image.jpg"
               value={formData.coverImageUrl}
-              onChange={(e) => setFormData({ ...formData, coverImageUrl: e.target.value })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  coverImageUrl: e.target.value
+                })
+              }
               style={{
                 width: '100%',
                 padding: '14px 16px',
@@ -1163,7 +1336,9 @@ function CreateCoursePage() {
                 fontSize: 16
               }}
               onFocus={(e) => (e.target.style.borderColor = '#38bdf8')}
-              onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.3)')}
+              onBlur={(e) =>
+                (e.target.style.borderColor = 'rgba(148,163,184,0.3)')
+              }
             />
           </div>
 
@@ -1182,7 +1357,12 @@ function CreateCoursePage() {
               type="url"
               placeholder="https://youtube.com/watch?v=..."
               value={formData.previewVideoUrl}
-              onChange={(e) => setFormData({ ...formData, previewVideoUrl: e.target.value })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  previewVideoUrl: e.target.value
+                })
+              }
               style={{
                 width: '100%',
                 padding: '14px 16px',
@@ -1193,7 +1373,9 @@ function CreateCoursePage() {
                 fontSize: 16
               }}
               onFocus={(e) => (e.target.style.borderColor = '#38bdf8')}
-              onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.3)')}
+              onBlur={(e) =>
+                (e.target.style.borderColor = 'rgba(148,163,184,0.3)')
+              }
             />
           </div>
 
@@ -1203,17 +1385,23 @@ function CreateCoursePage() {
               disabled={loading}
               style={{
                 flex: 1,
-                background: loading ? 'rgba(71,85,105,0.6)' : 'linear-gradient(135deg, #10b981, #059669)',
+                background: loading
+                  ? 'rgba(71,85,105,0.6)'
+                  : 'linear-gradient(135deg, #10b981, #059669)',
                 border: 'none',
                 color: 'white',
-                padding: '16px',
+                padding: 16,
                 borderRadius: 12,
                 fontSize: 16,
                 fontWeight: 600,
                 cursor: loading ? 'not-allowed' : 'pointer'
               }}
             >
-              {loading ? 'Сохраняем...' : (isEdit ? 'Сохранить изменения' : 'Создать курс')}
+              {loading
+                ? 'Сохраняем...'
+                : isEdit
+                ? 'Сохранить изменения'
+                : 'Создать курс'}
             </button>
             <Link
               to="/"
@@ -1250,21 +1438,17 @@ function App() {
       fetch(`${API_URL}/courses?page=0&size=20&sortBy=title`)
         .then((response) => response.json())
         .then((data) => {
-          console.log('🔥 API DATA:', data);
-
-          let courses = [];
+          let loadedCourses = [];
           if (data.content) {
-            courses = data.content;
+            loadedCourses = data.content;
           } else if (Array.isArray(data)) {
-            courses = data;
+            loadedCourses = data;
           }
-
-          console.log('📋 КУРСЫ:', courses.length);
-          setCourses(courses);
+          setCourses(loadedCourses);
           setLoading(false);
         })
         .catch((err) => {
-          console.error('Ошибка:', err);
+          console.error('Ошибка загрузки курсов:', err);
           setLoading(false);
         });
     };
@@ -1272,7 +1456,6 @@ function App() {
     loadCourses();
 
     const handleCourseCreated = () => {
-      console.log('🆕 Новый курс создан! Обновляем список...');
       setLoading(true);
       loadCourses();
     };
@@ -1300,10 +1483,18 @@ function App() {
         <Routes>
           <Route path="/courses/:id/manage" element={<CourseManagePage />} />
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="/" element={<Home courses={courses} loading={loading} />} />
+          <Route
+            path="/"
+            element={<Home courses={courses} loading={loading} />}
+          />
           <Route path="/courses/:id" element={<CourseDetails />} />
           <Route path="/create-course" element={<CreateCoursePage />} />
-          <Route path="/about" element={<div style={{ padding: 40, color: 'white' }}>О нас</div>} />
+          <Route
+            path="/about"
+            element={
+              <div style={{ padding: 40, color: 'white' }}>О нас</div>
+            }
+          />
         </Routes>
       </div>
     </Router>
