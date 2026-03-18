@@ -423,12 +423,15 @@ function CourseDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // было уже
+  const [hasAccess, setHasAccess] = useState(false);
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [isAuthor, setIsAuthor] = useState(false);
 
+  // 1) грузим курс + уроки
   useEffect(() => {
     setLoading(true);
 
@@ -457,6 +460,7 @@ function CourseDetails() {
       });
   }, [id]);
 
+  // 2) определяем, автор ли текущий пользователь
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
 
@@ -476,9 +480,35 @@ function CourseDetails() {
     const courseAuthorEmail =
       (course.author && course.author.email) || course.authorEmail || null;
 
-    const isOwner = !!courseAuthorEmail && !!email && courseAuthorEmail === email;
+    const isOwner =
+      !!courseAuthorEmail && !!email && courseAuthorEmail === email;
     setIsAuthor(role === 'ADMIN' || isOwner);
   }, [course]);
+
+  // 3) решаем, есть ли доступ к урокам (автор ИЛИ купивший)
+  useEffect(() => {
+    // автор/админ всегда видит уроки
+    if (isAuthor) {
+      setHasAccess(true);
+      return;
+    }
+
+    // дальше пока простая заглушка: смотрим localStorage
+    const raw = localStorage.getItem('purchasedCourses');
+    if (!raw) {
+      setHasAccess(false);
+      return;
+    }
+
+    try {
+      const ids = JSON.parse(raw);
+      const has =
+        Array.isArray(ids) && ids.includes(Number(id));
+      setHasAccess(has);
+    } catch {
+      setHasAccess(false);
+    }
+  }, [id, isAuthor]);
 
   const handleEdit = () => {
     if (!course) return;
@@ -528,6 +558,7 @@ function CourseDetails() {
     }
   };
 
+  // сортируем уроки по orderNumber
   const sortedLessons =
     course && Array.isArray(course.lessons)
       ? [...course.lessons].sort((a, b) => {
@@ -536,6 +567,9 @@ function CourseDetails() {
           return orderA - orderB;
         })
       : [];
+
+  // удобный флаг: можно ли показывать уроки и плеер
+  const canViewLessons = isAuthor || hasAccess;
 
   if (loading) {
     return (
@@ -593,6 +627,7 @@ function CourseDetails() {
               alignItems: 'start'
             }}
           >
+            {/* Левая колонка: инфо + плеер + уроки */}
             <div>
               <h1
                 style={{
@@ -637,6 +672,7 @@ function CourseDetails() {
                   'Подробное описание курса будет добавлено в ближайшее время.'}
               </p>
 
+              {/* Превью-ролик с YouTube — видно всем */}
               {course.previewVideoUrl && (
                 <div style={{ marginBottom: 32 }}>
                   <iframe
@@ -658,21 +694,29 @@ function CourseDetails() {
                 </div>
               )}
 
-              {selectedLesson && selectedLesson.videoUrl && (
-                <div style={{ marginBottom: 32 }}>
-                  <h2
-                    style={{
-                      fontSize: 20,
-                      color: '#e5e7eb',
-                      marginBottom: 12
-                    }}
-                  >
-                    Сейчас играет: {selectedLesson.title}
-                  </h2>
-                  <LessonPlayer hlsUrl={selectedLesson.videoUrl} />
-                </div>
-              )}
+              {/* HLS-плеер с уроком — только если есть доступ.
+                  И БЕЗ автозапуска (autoPlay={false}). */}
+              {canViewLessons &&
+                selectedLesson &&
+                selectedLesson.videoUrl && (
+                  <div style={{ marginBottom: 32 }}>
+                    <h2
+                      style={{
+                        fontSize: 20,
+                        color: '#e5e7eb',
+                        marginBottom: 12
+                      }}
+                    >
+                      Сейчас играет: {selectedLesson.title}
+                    </h2>
+                    <LessonPlayer
+                      hlsUrl={selectedLesson.videoUrl}
+                      autoPlay={false}
+                    />
+                  </div>
+                )}
 
+              {/* Кнопки автора / покупка */}
               {isAuthor ? (
                 <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
                   <Link
@@ -744,90 +788,107 @@ function CourseDetails() {
                 </button>
               )}
 
-              {sortedLessons.length > 0 ? (
-                <div style={{ marginTop: 40 }}>
-                  <h2
-                    style={{
-                      fontSize: 24,
-                      color: '#e5e7eb',
-                      marginBottom: 20
-                    }}
-                  >
-                    Уроки ({sortedLessons.length})
-                  </h2>
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 12
-                    }}
-                  >
-                    {sortedLessons.map((lesson, index) => (
-                      <div
-                        key={lesson.id}
-                        onClick={() => setSelectedLesson(lesson)}
-                        style={{
-                          padding: 16,
-                          background: '#020617',
-                          borderRadius: 12,
-                          borderLeft: '3px solid #38bdf8',
-                          cursor: 'pointer',
-                          transition: 'background 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#1e293b';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = '#020617';
-                        }}
-                      >
+              {/* Блок уроков: либо показываем список, либо заглушку о покупке */}
+              {canViewLessons ? (
+                sortedLessons.length > 0 ? (
+                  <div style={{ marginTop: 40 }}>
+                    <h2
+                      style={{
+                        fontSize: 24,
+                        color: '#e5e7eb',
+                        marginBottom: 20
+                      }}
+                    >
+                      Уроки ({sortedLessons.length})
+                    </h2>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 12
+                      }}
+                    >
+                      {sortedLessons.map((lesson, index) => (
                         <div
+                          key={lesson.id}
+                          onClick={() => setSelectedLesson(lesson)}
                           style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
+                            padding: 16,
+                            background: '#020617',
+                            borderRadius: 12,
+                            borderLeft: '3px solid #38bdf8',
+                            cursor: 'pointer',
+                            transition: 'background 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#1e293b';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#020617';
                           }}
                         >
-                          <span
+                          <div
                             style={{
-                              fontWeight: 600,
-                              color: '#e5e7eb'
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center'
                             }}
                           >
-                            {index + 1}. {lesson.title}
-                          </span>
-                          {lesson.durationMinutes &&
-                            lesson.durationMinutes > 0 && (
-                              <span
-                                style={{
-                                  color: '#6b7280',
-                                  fontSize: 12
-                                }}
-                              >
-                                {lesson.durationMinutes} мин.
-                              </span>
-                            )}
+                            <span
+                              style={{
+                                fontWeight: 600,
+                                color: '#e5e7eb'
+                              }}
+                            >
+                              {index + 1}. {lesson.title}
+                            </span>
+                            {lesson.durationMinutes &&
+                              lesson.durationMinutes > 0 && (
+                                <span
+                                  style={{
+                                    color: '#6b7280',
+                                    fontSize: 12
+                                  }}
+                                >
+                                  {lesson.durationMinutes} мин.
+                                </span>
+                              )}
+                          </div>
+                          <div
+                            style={{
+                              marginTop: 6,
+                              fontSize: 12,
+                              color:
+                                selectedLesson &&
+                                selectedLesson.id === lesson.id
+                                  ? '#22c55e'
+                                  : '#9ca3af'
+                            }}
+                          >
+                            {selectedLesson &&
+                            selectedLesson.id === lesson.id
+                              ? '▶ Сейчас воспроизводится'
+                              : 'Нажмите, чтобы воспроизвести'}
+                          </div>
                         </div>
-                        <div
-                          style={{
-                            marginTop: 6,
-                            fontSize: 12,
-                            color:
-                              selectedLesson &&
-                              selectedLesson.id === lesson.id
-                                ? '#22c55e'
-                                : '#9ca3af'
-                          }}
-                        >
-                          {selectedLesson &&
-                          selectedLesson.id === lesson.id
-                            ? '▶ Сейчас воспроизводится'
-                            : 'Нажмите, чтобы воспроизвести'}
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div
+                    style={{
+                      marginTop: 40,
+                      padding: 24,
+                      background: '#020617',
+                      borderRadius: 12,
+                      textAlign: 'center'
+                    }}
+                  >
+                    <div style={{ color: '#9ca3af', fontSize: 16 }}>
+                      Уроки скоро появятся
+                    </div>
+                  </div>
+                )
               ) : (
                 <div
                   style={{
@@ -838,13 +899,29 @@ function CourseDetails() {
                     textAlign: 'center'
                   }}
                 >
-                  <div style={{ color: '#9ca3af', fontSize: 16 }}>
-                    Уроки скоро появятся
+                  <div
+                    style={{
+                      color: '#9ca3af',
+                      fontSize: 16,
+                      marginBottom: 8
+                    }}
+                  >
+                    Уроки доступны только после покупки курса.
+                  </div>
+                  <div
+                    style={{
+                      color: '#6b7280',
+                      fontSize: 14
+                    }}
+                  >
+                    Посмотрите превью‑видео и описание, затем нажмите
+                    «Купить курс».
                   </div>
                 </div>
               )}
             </div>
 
+            {/* Правая колонка: автор */}
             <div
               style={{
                 background: '#020617',
@@ -891,6 +968,7 @@ function CourseDetails() {
         </div>
       </div>
 
+      {/* модалка оплаты — без изменений */}
       {showPaymentModal && !isAuthor && (
         <div
           style={{
@@ -1056,6 +1134,7 @@ function CourseDetails() {
     </>
   );
 }
+
 
 function CreateCoursePage() {
   const location = useLocation();
