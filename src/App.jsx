@@ -691,35 +691,44 @@ const handleDelete = async () => {
                           borderLeft: '3px solid #38bdf8'
                         }}
                       >
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                          }}
-                        >
-                          <span style={{ fontWeight: 600, color: '#e5e7eb' }}>
-                            {index + 1}. {lesson.title}
-                          </span>
-                          <span style={{ color: '#6b7280', fontSize: 12 }}>
-                            {lesson.durationMinutes} мин.
-                          </span>
-                        </div>
-                        {lesson.videoUrl && (
-                          <a
-                            href={lesson.videoUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              color: '#38bdf8',
-                              fontSize: 14,
-                              marginTop: 4,
-                              display: 'block'
-                            }}
-                          >
-                            ▶️ Смотреть урок
-                          </a>
-                        )}
+                       <div
+  style={{
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  }}
+>
+  <span style={{ fontWeight: 600, color: '#e5e7eb' }}>
+    {index + 1}. {lesson.title}
+  </span>
+  {lesson.durationMinutes && lesson.durationMinutes > 0 && (
+    <span style={{ color: '#6b7280', fontSize: 12 }}>
+      {lesson.durationMinutes} мин.
+    </span>
+  )}
+</div>
+{lesson.videoUrl && (
+  <div style={{ marginTop: 8 }}>
+    <span style={{ 
+      color: '#38bdf8', 
+      fontSize: 12, 
+      cursor: 'pointer',
+      display: 'block'
+    }} 
+    title={lesson.videoUrl}
+    onClick={() => {
+      alert(`HLS видео: ${lesson.videoUrl}\n\nСкопируй ссылку и вставь в плеер:\nVLC → Media → Open Network Stream`);
+    }}
+    onContextMenu={(e) => {
+      e.preventDefault();
+      navigator.clipboard.writeText(lesson.videoUrl);
+      alert('✅ HLS URL скопирован в буфер!');
+    }}
+    >
+      📹 HLS Bunny ({lesson.videoUrl.split('/').pop()?.split('.')[0] || 'видео'})
+    </span>
+  </div>
+)}
                       </div>
                     ))}
                   </div>
