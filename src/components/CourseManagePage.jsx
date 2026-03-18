@@ -9,12 +9,10 @@ function CourseManagePage() {
   const [lessons, setLessons] = useState([]);
   const [newLesson, setNewLesson] = useState({ 
     title: '', 
-    videoUrl: '', 
-    durationMinutes: 0 
+    videoUrl: ''  // ← ТОЛЬКО 2 ПОЛЯ!
   });
   const [loading, setLoading] = useState(false);
 
-  // Загрузка курса + уроков
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -44,19 +42,21 @@ function CourseManagePage() {
           'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` })
         },
-        body: JSON.stringify(newLesson)
+        body: JSON.stringify(newLesson)  // ← Только title + videoUrl
       });
 
       if (response.ok) {
-        // Очистить форму
-        setNewLesson({ title: '', videoUrl: '', durationMinutes: 0 });
-        // Перезагрузить уроки
+        setNewLesson({ title: '', videoUrl: '' });  // ← Очистка
         const lessonsRes = await fetch(`${API_URL}/courses/${id}/lessons`);
         const lessonsData = await lessonsRes.json();
         setLessons(lessonsData);
+      } else {
+        console.error('ОШИБКА:', response.status, await response.text());
+        alert(`Ошибка ${response.status}`);
       }
     } catch (e) {
-      alert('Ошибка добавления урока');
+      console.error('ОШИБКА:', e);
+      alert('Сервер недоступен');
     } finally {
       setLoading(false);
     }
@@ -67,17 +67,14 @@ function CourseManagePage() {
   return (
     <div style={{ padding: '40px 20px', background: '#0f172a', minHeight: '100vh' }}>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-        <Link 
-          to={`/courses/${id}`} 
-          style={{ 
-            color: '#38bdf8', 
-            textDecoration: 'none', 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            gap: 8,
-            marginBottom: 24 
-          }}
-        >
+        <Link to={`/courses/${id}`} style={{ 
+          color: '#38bdf8', 
+          textDecoration: 'none', 
+          display: 'inline-flex', 
+          alignItems: 'center', 
+          gap: 8,
+          marginBottom: 24 
+        }}>
           ← Назад к курсу
         </Link>
 
@@ -88,7 +85,7 @@ function CourseManagePage() {
           ID: {id} | Уроков: {lessons.length}
         </div>
 
-        {/* Форма добавления урока */}
+        {/* Форма — ТОЛЬКО 2 ПОЛЯ! */}
         <div style={{
           background: '#020617',
           padding: 24,
@@ -98,9 +95,9 @@ function CourseManagePage() {
         }}>
           <h3 style={{ color: '#e5e7eb', marginBottom: 16 }}>➕ Новый урок</h3>
           
-          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '2fr 2fr 1fr auto' }}>
+          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '2fr 2fr auto' }}>
             <input
-              placeholder="Название урока (обязательно)"
+              placeholder="Название урока"
               value={newLesson.title}
               onChange={e => setNewLesson({ ...newLesson, title: e.target.value })}
               style={{
@@ -113,24 +110,9 @@ function CourseManagePage() {
             />
             
             <input
-              placeholder="Ссылка Bunny Stream (m3u8) (обязательно)"
+              placeholder="Bunny HLS ссылка (m3u8)"
               value={newLesson.videoUrl}
               onChange={e => setNewLesson({ ...newLesson, videoUrl: e.target.value })}
-              style={{
-                padding: '12px 16px',
-                background: '#1e293b',
-                border: '1px solid rgba(148,163,184,0.3)',
-                borderRadius: 12,
-                color: 'white'
-              }}
-            />
-            
-            <input
-              type="number"
-              min="1"
-              placeholder="Минут"
-              value={newLesson.durationMinutes}
-              onChange={e => setNewLesson({ ...newLesson, durationMinutes: +e.target.value })}
               style={{
                 padding: '12px 16px',
                 background: '#1e293b',
@@ -186,7 +168,7 @@ function CourseManagePage() {
                     {index + 1}. {lesson.title}
                   </div>
                   <div style={{ color: '#9ca3af', fontSize: 14 }}>
-                    {lesson.durationMinutes} мин • {lesson.videoUrl ? '✅ Видео' : '❌ Без видео'}
+                    ✅ Видео готово
                   </div>
                 </div>
                 <code style={{ 
@@ -199,7 +181,7 @@ function CourseManagePage() {
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap'
                 }}>
-                  {lesson.videoUrl || 'нет'}
+                  {lesson.videoUrl}
                 </code>
               </div>
             ))
