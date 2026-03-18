@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import LessonPlayer from '../components/LessonPlayer'; // ← HLS ПЛЕЕР!
 
 const API_URL = 'https://bek-production-15ec.up.railway.app';
 
@@ -9,9 +10,10 @@ function CourseManagePage() {
   const [lessons, setLessons] = useState([]);
   const [newLesson, setNewLesson] = useState({ 
     title: '', 
-    videoUrl: ''  // ← ТОЛЬКО 2 ПОЛЯ!
+    videoUrl: ''  
   });
   const [loading, setLoading] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState(null); // ← ПЛЕЕР состояние!
 
   useEffect(() => {
     const loadData = async () => {
@@ -42,11 +44,11 @@ function CourseManagePage() {
           'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` })
         },
-        body: JSON.stringify(newLesson)  // ← Только title + videoUrl
+        body: JSON.stringify(newLesson)
       });
 
       if (response.ok) {
-        setNewLesson({ title: '', videoUrl: '' });  // ← Очистка
+        setNewLesson({ title: '', videoUrl: '' });
         const lessonsRes = await fetch(`${API_URL}/courses/${id}/lessons`);
         const lessonsData = await lessonsRes.json();
         setLessons(lessonsData);
@@ -140,51 +142,91 @@ function CourseManagePage() {
           </div>
         </div>
 
-        {/* Список уроков */}
-        <div style={{ display: 'grid', gap: 12 }}>
-          {lessons.length === 0 ? (
-            <div style={{ 
-              padding: 40, 
-              textAlign: 'center', 
-              color: '#9ca3af',
-              background: '#020617',
-              borderRadius: 16
-            }}>
-              Нет уроков. Добавьте первый! 🎥
+        {/* ✅ НОВЫЙ СПИСОК + ПЛЕЕР! */}
+        <div>
+          {selectedLesson ? (
+            // 🎥 ПЛЕЕР
+            <div style={{ marginTop: '24px' }}>
+              <h3 style={{ color: '#e5e7eb', marginBottom: '16px' }}>
+                ▶️ {selectedLesson.title}
+              </h3>
+              <LessonPlayer hlsUrl={selectedLesson.videoUrl} />
+              <button 
+                onClick={() => setSelectedLesson(null)}
+                style={{
+                  marginTop: '16px',
+                  padding: '12px 24px',
+                  background: 'transparent',
+                  color: '#38bdf8',
+                  border: '1px solid #38bdf8',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                ← Назад к списку
+              </button>
             </div>
           ) : (
-            lessons.map((lesson, index) => (
-              <div key={lesson.id} style={{
-                padding: 20,
-                background: '#020617',
-                borderRadius: 12,
-                borderLeft: '4px solid #38bdf8',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <div>
-                  <div style={{ fontWeight: 600, color: '#e5e7eb' }}>
-                    {index + 1}. {lesson.title}
-                  </div>
-                  <div style={{ color: '#9ca3af', fontSize: 14 }}>
-                    ✅ Видео готово
-                  </div>
-                </div>
-                <code style={{ 
-                  background: '#1e293b', 
-                  padding: '4px 8px', 
-                  borderRadius: 6, 
-                  fontSize: 12,
-                  maxWidth: 300,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+            // 📋 СПИСОК УРОКОВ (кликабельный!)
+            <div style={{ display: 'grid', gap: 12 }}>
+              {lessons.length === 0 ? (
+                <div style={{ 
+                  padding: 40, 
+                  textAlign: 'center', 
+                  color: '#9ca3af',
+                  background: '#020617',
+                  borderRadius: 16
                 }}>
-                  {lesson.videoUrl}
-                </code>
-              </div>
-            ))
+                  Нет уроков. Добавьте первый! 🎥
+                </div>
+              ) : (
+                lessons.map((lesson, index) => (
+                  <div 
+                    key={lesson.id}
+                    style={{
+                      padding: 20,
+                      background: '#020617',
+                      borderRadius: 12,
+                      borderLeft: '4px solid #38bdf8',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s'
+                    }}
+                    onClick={() => setSelectedLesson(lesson)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#1e293b';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#020617';
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: '#e5e7eb' }}>
+                          {index + 1}. {lesson.title}
+                        </div>
+                        {lesson.durationMinutes && lesson.durationMinutes > 0 && (
+                          <div style={{ color: '#9ca3af', fontSize: 14 }}>
+                            {lesson.durationMinutes} мин.
+                          </div>
+                        )}
+                      </div>
+                      <code style={{ 
+                        background: '#1e293b', 
+                        padding: '4px 8px', 
+                        borderRadius: 6, 
+                        fontSize: 12,
+                        maxWidth: 250,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        HLS готово
+                      </code>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           )}
         </div>
       </div>
