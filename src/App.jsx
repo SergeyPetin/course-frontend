@@ -1,4 +1,5 @@
 // build bump
+import CourseManagePage from './components/CourseManagePage';
 import React, { useState, useEffect } from 'react';
 import CourseCard from './components/CourseCard';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
@@ -607,38 +608,54 @@ const handleDelete = async () => {
                   - если это автор/админ — показываем Редактировать/Удалить
                   - иначе — обычную кнопку "Купить курс" */}
               {isAuthor ? (
-                <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-                  <button
-                    onClick={handleEdit}
-                    style={{
-                      background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
-                      border: 'none',
-                      color: 'white',
-                      padding: '14px 24px',
-                      borderRadius: 12,
-                      fontSize: 15,
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    ✏️ Редактировать курс
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    style={{
-                      background: '#dc2626',
-                      border: 'none',
-                      color: 'white',
-                      padding: '14px 20px',
-                      borderRadius: 12,
-                      fontSize: 15,
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    🗑 Удалить
-                  </button>
-                </div>
+  <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+    <Link
+      to={`/courses/${course.id}/manage`}  // ← /courses/ не /course/
+      style={{
+        background: 'linear-gradient(135deg, #10b981, #059669)',
+        color: 'white',
+        padding: '14px 24px',
+        borderRadius: 12,
+        fontSize: 15,
+        fontWeight: 600,
+        textDecoration: 'none',
+        display: 'inline-flex',
+        alignItems: 'center'
+      }}
+    >
+      📋 Управление уроками
+    </Link>
+    <button
+      onClick={handleEdit}
+      style={{
+        background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+        border: 'none',
+        color: 'white',
+        padding: '14px 24px',
+        borderRadius: 12,
+        fontSize: 15,
+        fontWeight: 600,
+        cursor: 'pointer'
+      }}
+    >
+      ✏️ Редактировать курс
+    </button>
+    <button
+      onClick={handleDelete}
+      style={{
+        background: '#dc2626',
+        border: 'none',
+        color: 'white',
+        padding: '14px 20px',
+        borderRadius: 12,
+        fontSize: 15,
+        fontWeight: 600,
+        cursor: 'pointer'
+      }}
+    >
+      🗑 Удалить
+    </button>
+  </div>
               ) : (
                 <button
                   onClick={() => setShowPaymentModal(true)}
@@ -1272,6 +1289,7 @@ function App() {
       >
         <Header />
         <Routes>
+          <Route path="/courses/:id/manage" element={<CourseManagePage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/" element={<Home courses={courses} loading={loading} />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
