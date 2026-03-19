@@ -750,7 +750,7 @@ function CourseDetails() {
                   И БЕЗ автозапуска (autoPlay={false}). */}
               {canViewLessons &&
                 selectedLesson &&
-                selectedLesson.videoUrl && (
+                selectedLesson.videoId && (
                   <div style={{ marginBottom: 32 }}>
                     <h2
                       style={{
@@ -762,7 +762,7 @@ function CourseDetails() {
                       Сейчас играет: {selectedLesson.title}
                     </h2>
                     <LessonPlayer
-                      hlsUrl={selectedLesson.videoUrl}
+                      videoId={selectedLesson.videoId}
                       autoPlay={false}
                     />
                   </div>

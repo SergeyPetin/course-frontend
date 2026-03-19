@@ -10,7 +10,7 @@ function CourseManagePage() {
   const [lessons, setLessons] = useState([]);
   const [newLesson, setNewLesson] = useState({
     title: '',
-    videoUrl: ''
+    videoId: ''
   });
   const [loading, setLoading] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
@@ -47,7 +47,7 @@ function CourseManagePage() {
   }, [id]);
 
   const addLesson = async () => {
-    if (!newLesson.title.trim() || !newLesson.videoUrl.trim()) return;
+    if (!newLesson.title.trim() || !newLesson.videoId.trim()) return;
 
     setLoading(true);
     try {
@@ -62,7 +62,7 @@ function CourseManagePage() {
       });
 
       if (response.ok) {
-        setNewLesson({ title: '', videoUrl: '' });
+        setNewLesson({ title: '', videoId: '' });
         await loadLessons();
       } else {
         console.error('Ошибка создания урока:', response.status, await response.text());
@@ -159,10 +159,9 @@ function CourseManagePage() {
             }}
           >
             <input
-              placeholder="Название урока"
-              value={newLesson.title}
-              onChange={(e) =>
-                setNewLesson({ ...newLesson, title: e.target.value })
+              value={newLesson.videoId}
+onChange={(e) =>
+  setNewLesson({ ...newLesson, videoId: e.target.value })
               }
               style={{
                 padding: '12px 16px',
@@ -174,10 +173,10 @@ function CourseManagePage() {
             />
 
             <input
-              placeholder="Bunny HLS ссылка (m3u8)"
-              value={newLesson.videoUrl}
-              onChange={(e) =>
-                setNewLesson({ ...newLesson, videoUrl: e.target.value })
+              placeholder="Bunny Video ID (dd1be3f3-8796-4de9-aa88-fa152c75f65c)"
+value={newLesson.videoId}
+onChange={(e) =>
+  setNewLesson({ ...newLesson, videoId: e.target.value })
               }
               style={{
                 padding: '12px 16px',
@@ -193,7 +192,7 @@ function CourseManagePage() {
               disabled={
                 loading ||
                 !newLesson.title.trim() ||
-                !newLesson.videoUrl.trim()
+              !newLesson.videoId.trim()
               }
               style={{
                 padding: '12px 24px',
