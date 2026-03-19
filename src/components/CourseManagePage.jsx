@@ -65,7 +65,11 @@ function CourseManagePage() {
         setNewLesson({ title: '', videoId: '' });
         await loadLessons();
       } else {
-        console.error('Ошибка создания урока:', response.status, await response.text());
+        console.error(
+          'Ошибка создания урока:',
+          response.status,
+          await response.text()
+        );
         alert(`Ошибка ${response.status}`);
       }
     } catch (e) {
@@ -158,12 +162,28 @@ function CourseManagePage() {
               gridTemplateColumns: '2fr 2fr auto'
             }}
           >
-            
+            {/* Название урока */}
             <input
-              placeholder="Bunny Video ID (dd1be3f3-8796-4de9-aa88-fa152c75f65c)"
-value={newLesson.videoId}
-onChange={(e) =>
-  setNewLesson({ ...newLesson, videoId: e.target.value })
+              placeholder="Название урока"
+              value={newLesson.title}
+              onChange={(e) =>
+                setNewLesson({ ...newLesson, title: e.target.value })
+              }
+              style={{
+                padding: '12px 16px',
+                background: '#1e293b',
+                border: '1px solid rgba(148,163,184,0.3)',
+                borderRadius: 12,
+                color: 'white'
+              }}
+            />
+
+            {/* Bunny Video ID */}
+            <input
+              placeholder="Bunny Video ID (874d226f-f531-4f78-bdc1-362e9ef7a7d5)"
+              value={newLesson.videoId}
+              onChange={(e) =>
+                setNewLesson({ ...newLesson, videoId: e.target.value })
               }
               style={{
                 padding: '12px 16px',
@@ -179,7 +199,7 @@ onChange={(e) =>
               disabled={
                 loading ||
                 !newLesson.title.trim() ||
-              !newLesson.videoId.trim()
+                !newLesson.videoId.trim()
               }
               style={{
                 padding: '12px 24px',
@@ -285,7 +305,7 @@ onChange={(e) =>
                           color: '#38bdf8'
                         }}
                       >
-                        Нажмите, чтобы воспроизвести HLS
+                        Нажмите, чтобы воспроизвести
                       </div>
                     </div>
 
