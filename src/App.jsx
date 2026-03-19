@@ -558,6 +558,51 @@ function CourseDetails() {
     }
   };
 
+  const handlePurchase = async () => {
+  // если уже куплен — просто закрываем модалку
+  if (hasAccess) {
+    setShowPaymentModal(false);
+    return;
+  }
+
+  try {
+    // пока имитируем покупку (потом привяжем к бэку /subscriptions)
+    const courseId = Number(id);
+
+    // читаем из localStorage (если нет — создаём пустой массив)
+    let purchased = [];
+    const raw = localStorage.getItem('purchasedCourses');
+    if (raw) {
+      try {
+        purchased = JSON.parse(raw);
+      } catch {
+        purchased = [];
+      }
+    }
+
+    // добавляем ID курса, если его там нет
+    if (!purchased.includes(courseId)) {
+      purchased.push(courseId);
+      localStorage.setItem('purchasedCourses', JSON.stringify(purchased));
+    }
+
+    // сразу даём доступ
+    setHasAccess(true);
+    alert('✅ Курс куплен! Теперь вы можете смотреть уроки.');
+
+    // закрываем модалку
+    setShowPaymentModal(false);
+
+    // обновляем selectedLesson на случай, если он не был выбран
+    if (!selectedLesson && sortedLessons.length > 0) {
+      setSelectedLesson(sortedLessons[0]);
+    }
+  } catch (error) {
+    console.error('Ошибка при покупке:', error);
+    alert('Ошибка при покупке курса. Попробуйте ещё раз.');
+  }
+};
+
   // сортируем уроки по orderNumber
   const sortedLessons =
     course && Array.isArray(course.lessons)
@@ -718,75 +763,72 @@ function CourseDetails() {
 
               {/* Кнопки автора / покупка */}
               {isAuthor ? (
-                <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-                  <Link
-                    to={`/courses/${course.id}/manage`}
-                    style={{
-                      background:
-                        'linear-gradient(135deg, #10b981, #059669)',
-                      color: 'white',
-                      padding: '14px 24px',
-                      borderRadius: 12,
-                      fontSize: 15,
-                      fontWeight: 600,
-                      textDecoration: 'none',
-                      display: 'inline-flex',
-                      alignItems: 'center'
-                    }}
-                  >
-                    📋 Управление уроками
-                  </Link>
-                  <button
-                    onClick={handleEdit}
-                    style={{
-                      background:
-                        'linear-gradient(135deg, #38bdf8, #6366f1)',
-                      border: 'none',
-                      color: 'white',
-                      padding: '14px 24px',
-                      borderRadius: 12,
-                      fontSize: 15,
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    ✏️ Редактировать курс
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    style={{
-                      background: '#dc2626',
-                      border: 'none',
-                      color: 'white',
-                      padding: '14px 20px',
-                      borderRadius: 12,
-                      fontSize: 15,
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    🗑 Удалить
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowPaymentModal(true)}
-                  style={{
-                    background:
-                      'linear-gradient(135deg, #22c55e, #16a34a)',
-                    border: 'none',
-                    color: 'white',
-                    padding: '16px 32px',
-                    borderRadius: 12,
-                    fontSize: 16,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    boxShadow: '0 12px 30px rgba(34,197,94,0.4)'
-                  }}
-                >
-                  Купить курс
-                </button>
-              )}
+  <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+    <Link
+      to={`/courses/${course.id}/manage`}
+      style={{
+        background: 'linear-gradient(135deg, #10b981, #059669)',
+        color: 'white',
+        padding: '14px 24px',
+        borderRadius: 12,
+        fontSize: 15,
+        fontWeight: 600,
+        textDecoration: 'none',
+        display: 'inline-flex',
+        alignItems: 'center'
+      }}
+    >
+      📋 Управление уроками
+    </Link>
+    <button
+      onClick={handleEdit}
+      style={{
+        background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+        border: 'none',
+        color: 'white',
+        padding: '14px 24px',
+        borderRadius: 12,
+        fontSize: 15,
+        fontWeight: 600,
+        cursor: 'pointer'
+      }}
+    >
+      ✏️ Редактировать курс
+    </button>
+    <button
+      onClick={handleDelete}
+      style={{
+        background: '#dc2626',
+        border: 'none',
+        color: 'white',
+        padding: '14px 20px',
+        borderRadius: 12,
+        fontSize: 15,
+        fontWeight: 600,
+        cursor: 'pointer'
+      }}
+    >
+      🗑 Удалить
+    </button>
+  </div>
+) : (
+  <button
+    onClick={handlePurchase}
+    style={{
+      background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+      border: 'none',
+      color: 'white',
+      padding: '16px 32px',
+      borderRadius: 12,
+      fontSize: 16,
+      fontWeight: 600,
+      cursor: 'pointer',
+      boxShadow: '0 12px 30px rgba(34,197,94,0.4)'
+    }}
+  >
+    {hasAccess ? 'Открыть курс' : 'Купить курс'}
+  </button>
+)}
 
               {/* Блок уроков: либо показываем список, либо заглушку о покупке */}
               {canViewLessons ? (
@@ -968,7 +1010,6 @@ function CourseDetails() {
         </div>
       </div>
 
-      {/* модалка оплаты — без изменений */}
       {showPaymentModal && !isAuthor && (
         <div
           style={{
@@ -1050,10 +1091,7 @@ function CourseDetails() {
                   fontWeight: 600,
                   cursor: 'pointer'
                 }}
-                onClick={() => {
-                  setShowPaymentModal(false);
-                  window.open('https://www.tinkoff.ru/', '_blank');
-                }}
+                onClick={handlePurchase}
               >
                 🏦 Тинькофф (СБП/Карта)
               </button>
@@ -1068,10 +1106,7 @@ function CourseDetails() {
                   fontWeight: 600,
                   cursor: 'pointer'
                 }}
-                onClick={() => {
-                  setShowPaymentModal(false);
-                  window.open('https://qiwi.com/', '_blank');
-                }}
+                onClick={handlePurchase}
               >
                 💳 QIWI Кошелёк
               </button>
@@ -1086,10 +1121,7 @@ function CourseDetails() {
                   fontWeight: 600,
                   cursor: 'pointer'
                 }}
-                onClick={() => {
-                  setShowPaymentModal(false);
-                  window.open('https://yoomoney.ru/', '_blank');
-                }}
+                onClick={handlePurchase}
               >
                 💰 ЮMoney
               </button>
@@ -1119,10 +1151,7 @@ function CourseDetails() {
                     fontWeight: 600,
                     cursor: 'pointer'
                   }}
-                  onClick={() => {
-                    setShowPaymentModal(false);
-                    window.open('https://buy.stripe.com/', '_blank');
-                  }}
+                  onClick={handlePurchase}
                 >
                   💳 Stripe (Visa/MasterCard)
                 </button>
