@@ -1,52 +1,31 @@
-import React, { useRef, useEffect } from 'react';
-import Hls from 'hls.js';
+import React from 'react';
 
-const LessonPlayer = ({ hlsUrl }) => {
-  const videoRef = useRef(null);
-  const hlsRef = useRef(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-
-    // если нет video-элемента или ссылки — ничего не делаем
-    if (!video || !hlsUrl) return;
-
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(hlsUrl);     // загружаем HLS-поток
-      hls.attachMedia(video);     // «прикрепляем» его к <video>
-
-      hlsRef.current = hls;
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // нативная поддержка HLS (обычно Safari)
-      video.src = hlsUrl;
-    }
-
-    // когда компонент или ссылка меняется — чистим за собой
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
-  }, [hlsUrl]);
-
+const LessonPlayer = ({ videoId }) => {
   return (
     <div
       style={{
         width: '100%',
         margin: '20px 0',
-        background: '#000',
-        borderRadius: 12
+        borderRadius: 12,
+        overflow: 'hidden'
       }}
     >
-      <video
-        ref={videoRef}
-        controls                 // есть кнопка Play/Pause
-        style={{ width: '100%', height: 'auto', borderRadius: 12 }}
-        preload="metadata"       // подгружаем только метаданные, не всё видео
-        poster="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
-      />
+      <div style={{ position: 'relative', paddingTop: '56.25%' }}>
+        <iframe
+          src={`https://player.mediadelivery.net/embed/619827/${videoId}?autoplay=false&loop=false&muted=false&responsive=true`}
+          loading="lazy"
+          style={{
+            border: 0,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            height: '100%',
+            width: '100%'
+          }}
+          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+          allowFullScreen
+        />
+      </div>
     </div>
   );
 };

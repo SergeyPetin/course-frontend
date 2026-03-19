@@ -77,13 +77,15 @@ function Header() {
     >
       <div
         style={{
-          maxWidth: 960,
-          margin: '0 auto',
-          padding: '16px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}
+    maxWidth: 960,
+    margin: '0 auto',
+    padding: '16px 20px',
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16
+  }}
       >
         <Link
           to="/"
@@ -672,7 +674,7 @@ function CourseDetails() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 320px',
+              gridTemplateColumns: '1fr',
               gap: 40,
               alignItems: 'start'
             }}

@@ -223,7 +223,7 @@ function CourseManagePage() {
               >
                 ▶️ {selectedLesson.title}
               </h3>
-              <LessonPlayer hlsUrl={selectedLesson.videoUrl} />
+              <LessonPlayer videoId={selectedLesson.videoId} />
               <button
                 onClick={() => setSelectedLesson(null)}
                 style={{
