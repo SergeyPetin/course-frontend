@@ -11,6 +11,8 @@ import {
 import LessonPlayer from './components/LessonPlayer';
 import CourseManagePage from './components/CourseManagePage';
 import CourseCard from './components/CourseCard';
+import MyCoursesPage from './components/MyCoursesPage';
+
 
 const API_URL = 'https://bek-production-15ec.up.railway.app';
 
@@ -101,6 +103,9 @@ function Header() {
           <Link to="/" style={{ color: '#e5e7eb', textDecoration: 'none' }}>
             Курсы
           </Link>
+          <Link to="/my-courses" style={{ color: '#e5e7eb', textDecoration: 'none' }}>
+    Мои курсы
+  </Link>
           <Link to="/about" style={{ color: '#9ca3af', textDecoration: 'none' }}>
             О нас
           </Link>
@@ -1589,6 +1594,7 @@ function App() {
       >
         <Header />
         <Routes>
+          <Route path="/my-courses" element={<MyCoursesPage />} />
           <Route path="/courses/:id/manage" element={<CourseManagePage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route
