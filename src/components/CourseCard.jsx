@@ -2,6 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const CourseCard = ({ course }) => {
+  // проверяем, куплен ли этот курс
+  const raw = localStorage.getItem('purchasedCourses');
+  const purchasedIds = raw ? JSON.parse(raw) : [];
+  const isPurchased = purchasedIds.includes(course.id);
+
   return (
     <Link
       to={`/courses/${course.id}`}
@@ -19,7 +24,9 @@ const CourseCard = ({ course }) => {
           height: 320,
           display: 'flex',
           flexDirection: 'column',
-          border: '1px solid rgba(148,163,184,0.2)',
+          border: isPurchased 
+            ? '2px solid #22c55e'  // зелёная рамка для купленных
+            : '1px solid rgba(148,163,184,0.2)',
           transition: 'all 0.3s ease',
           cursor: 'pointer',
           overflow: 'hidden'
@@ -33,23 +40,23 @@ const CourseCard = ({ course }) => {
           e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
         }}
       >
-        {/* ✅ ОБЛОЖКА КУРСА */}
+        {/* Обложка курса */}
         {course.coverImageUrl ? (
           <div style={{ height: 140, marginBottom: 16, borderRadius: 12, overflow: 'hidden' }}>
             <img
-  key={`${course.id}-${course.coverImageUrl || 'empty'}-${Date.now()}`}
-  src={course.coverImageUrl ? `${course.coverImageUrl}?v=${Date.now()}` : ''}
-  alt={course.title}
-  style={{
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    borderRadius: 12
-  }}
-  onError={(e) => {
-    e.target.style.display = 'none';
-  }}
-/>
+              key={`${course.id}-${course.coverImageUrl || 'empty'}-${Date.now()}`}
+              src={course.coverImageUrl ? `${course.coverImageUrl}?v=${Date.now()}` : ''}
+              alt={course.title}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: 12
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
           </div>
         ) : (
           <div
@@ -76,8 +83,7 @@ const CourseCard = ({ course }) => {
             fontSize: 18,
             fontWeight: 700,
             color: '#e5e7eb',
-            margin: '0 0',
-            marginBottom: 8,
+            margin: '0 0 8px 0',
             lineHeight: 1.3,
             display: '-webkit-box',
             WebkitLineClamp: 2,
@@ -88,16 +94,35 @@ const CourseCard = ({ course }) => {
           {course.title}
         </h3>
 
-        {/* Цена */}
-        <div
-          style={{
-            fontSize: 20,
-            fontWeight: 700,
-            color: '#22c55e',
-            marginTop: 'auto'
-          }}
-        >
-          {course.price} ₽
+        {/* Нижняя часть: цена ИЛИ "Куплен" */}
+        <div style={{ marginTop: 'auto' }}>
+          {isPurchased ? (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                background: 'rgba(34, 197, 94, 0.2)',
+                color: '#22c55e',
+                padding: '8px 12px',
+                borderRadius: 999,
+                fontSize: 14,
+                fontWeight: 600
+              }}
+            >
+              ✅ Куплен
+            </div>
+          ) : (
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 700,
+                color: '#22c55e'
+              }}
+            >
+              {course.price} ₽
+            </div>
+          )}
         </div>
       </div>
     </Link>
