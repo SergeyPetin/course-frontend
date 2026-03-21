@@ -1594,6 +1594,13 @@ function App() {
       >
         <Header />
         <Routes>
+          <Route path="/payment-success" element={
+  <div style={{padding: '40px', textAlign: 'center', color: '#22c55e'}}>
+    <h1>✅ Оплата успешна!</h1>
+    <p>Подписка активирована. <Link to="/">Вернуться к курсам</Link></p>
+  </div>
+} />
+
           <Route path="/my-courses" element={<MyCoursesPage />} />
           <Route path="/courses/:id/manage" element={<CourseManagePage />} />
           <Route path="/auth" element={<AuthPage />} />
