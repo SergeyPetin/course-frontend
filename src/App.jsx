@@ -492,30 +492,41 @@ function CourseDetails() {
     setIsAuthor(role === 'ADMIN' || isOwner);
   }, [course]);
 
-  // 3) решаем, есть ли доступ к урокам (автор ИЛИ купивший)
-  useEffect(() => {
-    // автор/админ всегда видит уроки
-    if (isAuthor) {
-      setHasAccess(true);
-      return;
-    }
+useEffect(() => {
+  if (isAuthor) {
+    setHasAccess(true);
+    return;
+  }
 
-    // дальше пока простая заглушка: смотрим localStorage
-    const raw = localStorage.getItem('purchasedCourses');
-    if (!raw) {
-      setHasAccess(false);
-      return;
-    }
+  const token = localStorage.getItem('jwtToken');
+  if (!token || !course) {
+    setHasAccess(false);
+    return;
+  }
 
+  // Реальная проверка подписки!
+  const checkSubscription = async () => {
     try {
-      const ids = JSON.parse(raw);
-      const has =
-        Array.isArray(ids) && ids.includes(Number(id));
-      setHasAccess(has);
-    } catch {
+      const response = await fetch(`${API_URL}/subscriptions/my`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const subs = await response.json();
+        const hasSub = subs.some(sub => sub.course.id == id);
+        setHasAccess(hasSub);
+      }
+    } catch (e) {
+      console.error('Subscription check failed:', e);
       setHasAccess(false);
     }
-  }, [id, isAuthor]);
+  };
+
+  checkSubscription();
+}, [id, isAuthor]);
+
 
   const handleEdit = () => {
     if (!course) return;
@@ -565,50 +576,37 @@ function CourseDetails() {
     }
   };
 
-  const handlePurchase = async () => {
-  // если уже куплен — просто закрываем модалку
+const handlePurchase = async () => {
   if (hasAccess) {
     setShowPaymentModal(false);
     return;
   }
 
   try {
-    // пока имитируем покупку (потом привяжем к бэку /subscriptions)
-    const courseId = Number(id);
+    const token = localStorage.getItem('jwtToken');
+    const response = await fetch(`${API_URL}/payments/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      },
+      body: JSON.stringify({ courseId: Number(id) })
+    });
 
-    // читаем из localStorage (если нет — создаём пустой массив)
-    let purchased = [];
-    const raw = localStorage.getItem('purchasedCourses');
-    if (raw) {
-      try {
-        purchased = JSON.parse(raw);
-      } catch {
-        purchased = [];
-      }
-    }
-
-    // добавляем ID курса, если его там нет
-    if (!purchased.includes(courseId)) {
-      purchased.push(courseId);
-      localStorage.setItem('purchasedCourses', JSON.stringify(purchased));
-    }
-
-    // сразу даём доступ
-    setHasAccess(true);
-    alert('✅ Курс куплен! Теперь вы можете смотреть уроки.');
-
-    // закрываем модалку
-    setShowPaymentModal(false);
-
-    // обновляем selectedLesson на случай, если он не был выбран
-    if (!selectedLesson && sortedLessons.length > 0) {
-      setSelectedLesson(sortedLessons[0]);
+    const data = await response.json();
+    
+    if (response.ok && data.url) {
+      window.location.href = data.url;
+    } else {
+      console.error('Payment error:', data);
+      alert(`Ошибка оплаты: ${data.error || response.status}`);
     }
   } catch (error) {
-    console.error('Ошибка при покупке:', error);
-    alert('Ошибка при покупке курса. Попробуйте ещё раз.');
+    console.error('Payment network error:', error);
+    alert('Ошибка сети. Попробуйте позже.');
   }
 };
+
 
   // сортируем уроки по orderNumber
   const sortedLessons =
