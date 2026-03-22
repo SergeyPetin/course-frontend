@@ -493,33 +493,44 @@ function CourseDetails() {
   }, [course]);
 
 useEffect(() => {
+  console.log('🚀 useEffect [id] STARTED! id=', id, 'course=', !!course);
   if (isAuthor) {
     setHasAccess(true);
     return;
   }
 
-  const token = localStorage.getItem('jwtToken');
-  if (!token || !course) {
+  // Если нет course — ждём
+  if (!course) {
     setHasAccess(false);
     return;
   }
 
-  // Реальная проверка подписки!
+  const token = localStorage.getItem('jwtToken');
+  if (!token) {
+    setHasAccess(false);
+    return;
+  }
+
+  // 🔍 ПРОВЕРКА ПОДПИСКИ
   const checkSubscription = async () => {
     try {
+      console.log('🔍 Checking subscription for course:', id);
       const response = await fetch(`${API_URL}/subscriptions/my`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (response.ok) {
         const subs = await response.json();
+        console.log('🔍 Found subscriptions:', subs.map(s => s.course.id));
         const hasSub = subs.some(sub => sub.course.id == id);
+        console.log('🔍 RESULT hasAccess:', hasSub);  // DEBUG!
         setHasAccess(hasSub);
+      } else {
+        console.log('🔍 API error:', response.status);
+        setHasAccess(false);
       }
     } catch (e) {
-      console.error('Subscription check failed:', e);
+      console.error('🔍 Subscription check FAILED:', e);
       setHasAccess(false);
     }
   };
