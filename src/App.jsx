@@ -525,7 +525,7 @@ useEffect(() => {
   };
 
   checkSubscription();
-}, [id, isAuthor]);
+}, [id]);
 
 
   const handleEdit = () => {
