@@ -440,25 +440,39 @@ function CourseDetails() {
 
   // 🔥🚀 НОВЫЙ КОД №1 — ВСТАВЬ ЗДЕСЬ (ПОСЛЕ state):
   const checkSubscriptionNow = useCallback(async () => {
-    const token = localStorage.getItem('jwtToken');
-    if (!token || !id) return;
+  const token = localStorage.getItem('jwtToken');
+  if (!token || !id) return;
+  
+  console.log('🔍 AUTO-CHECK START → id:', id);
+  
+  try {
+    const response = await fetch(`${API_URL}/subscriptions/my`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
     
-    try {
-      const response = await fetch(`${API_URL}/subscriptions/my`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+    if (response.ok) {
+      const subs = await response.json();
+      console.log('🔍 SUBS:', subs.map(s => ({id: s.id, courseId: s.course?.id || s.courseId})));
+      
+      // 🔥 ФИКС: проверяем ВСЕ возможные поля
+      const hasSub = subs.some(sub => {
+        const courseId = sub.course?.id || sub.courseId || sub.course_id;
+        const match = Number(courseId) === Number(id);
+        console.log('🔍 MATCH:', {subId: sub.id, courseId, targetId: id, match});
+        return match;
       });
-      if (response.ok) {
-        const subs = await response.json();
-        const hasSub = subs.some(sub => sub.course?.id == id);
-        if (hasSub !== hasAccess) {
-          console.log('🔄 AUTO-UPDATE:', hasSub);
-          setHasAccess(hasSub);
-        }
+      
+      console.log('🔍 FINAL hasSub:', hasSub);
+      
+      if (hasSub !== hasAccess) {
+        console.log('🔄 AUTO-UPDATE:', hasAccess, '→', hasSub);
+        setHasAccess(hasSub);
       }
-    } catch (e) {
-      console.error('Auto-check failed:', e);
     }
-  }, [id, hasAccess]);
+  } catch (e) {
+    console.error('Auto-check failed:', e);
+  }
+}, [id, hasAccess]);
 
   // ✅ ТОЛЬКО 1 useEffect — ВСЁ ЗДЕСЬ!
   useEffect(() => {
