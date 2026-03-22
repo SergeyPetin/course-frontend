@@ -378,24 +378,13 @@ function AuthPage() {
   );
 }
 
-function Home({ courses, loading }) {
+function Home({ courses, userSubscriptions, loading }) {  // ← + userSubscriptions
+  const isPurchased = (courseId) => userSubscriptions.includes(courseId);  // ← НОВОЕ
+  
   return (
     <div style={{ padding: '40px 0' }}>
-      <div
-        style={{
-          maxWidth: 960,
-          margin: '0 auto',
-          color: 'white',
-          padding: '0 20px'
-        }}
-      >
-        <h1
-          style={{
-            fontSize: 32,
-            marginBottom: 24,
-            textAlign: 'center'
-          }}
-        >
+      <div style={{ maxWidth: 960, margin: '0 auto', color: 'white', padding: '0 20px' }}>
+        <h1 style={{ fontSize: 32, marginBottom: 24, textAlign: 'center' }}>
           Курсы по программированию
         </h1>
 
@@ -410,15 +399,13 @@ function Home({ courses, loading }) {
         )}
 
         {!loading && courses.length > 0 && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-              gap: 24
-            }}
-          >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 24 }}>
             {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+              <CourseCard 
+                key={course.id} 
+                course={course} 
+                isPurchased={isPurchased(course.id)}  // ← ГЛАВНОЕ ИЗМЕНЕНИЕ!
+              />
             ))}
           </div>
         )}
@@ -426,6 +413,7 @@ function Home({ courses, loading }) {
     </div>
   );
 }
+
 
 function CourseDetails() {
   const { id } = useParams();
@@ -443,8 +431,6 @@ function CourseDetails() {
   const token = localStorage.getItem('jwtToken');
   if (!token || !id) return;
   
-  console.log('🔍 AUTO-CHECK START → id:', id);
-  
   try {
     const response = await fetch(`${API_URL}/subscriptions/my`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -452,20 +438,12 @@ function CourseDetails() {
     
     if (response.ok) {
       const subs = await response.json();
-      console.log('🔍 SUBS:', subs.map(s => ({id: s.id, courseId: s.course?.id || s.courseId})));
+      const courseIds = subs.map(s => s.course?.id).filter(Boolean);
+      const hasSub = courseIds.includes(Number(id));
       
-      // 🔥 ФИКС: проверяем ВСЕ возможные поля
-      const hasSub = subs.some(sub => {
-        const courseId = sub.course?.id || sub.courseId || sub.course_id;
-        const match = Number(courseId) === Number(id);
-        console.log('🔍 MATCH:', {subId: sub.id, courseId, targetId: id, match});
-        return match;
-      });
-      
-      console.log('🔍 FINAL hasSub:', hasSub);
-      
+      // 🔥 ЛОГИ ТОЛЬКО ПРИ ИЗМЕНЕНИИ
       if (hasSub !== hasAccess) {
-        console.log('🔄 AUTO-UPDATE:', hasAccess, '→', hasSub);
+        console.log('🔄 AUTO-UPDATE:', hasAccess, '→', hasSub, 'Course IDs:', courseIds);
         setHasAccess(hasSub);
       }
     }
@@ -1564,6 +1542,7 @@ function CreateCoursePage() {
 function App() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userSubscriptions, setUserSubscriptions] = useState([]);  // ← НОВОЕ!
 
   useEffect(() => {
     const loadCourses = () => {
@@ -1586,6 +1565,21 @@ function App() {
     };
 
     loadCourses();
+
+    // ← НОВЫЙ useEffect для подписок!
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      fetch(`${API_URL}/subscriptions/my`, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      })
+      .then(res => res.json())
+      .then(subs => {
+        const ids = subs.map(s => s.course?.id || s.courseId);
+        setUserSubscriptions(ids);
+        console.log('📦 Загружены подписки:', ids);
+      })
+      .catch(err => console.error('Ошибка подписок:', err));
+    }
 
     const handleCourseCreated = () => {
       setLoading(true);
@@ -1614,19 +1608,22 @@ function App() {
         <Header />
         <Routes>
           <Route path="/payment-success" element={
-  <div style={{padding: '40px', textAlign: 'center', color: '#22c55e'}}>
-    <h1>✅ Оплата успешна!</h1>
-    <p>Подписка активирована. <Link to="/">Вернуться к курсам</Link></p>
-  </div>
-} />
+            <div style={{padding: '40px', textAlign: 'center', color: '#22c55e'}}>
+              <h1>✅ Оплата успешна!</h1>
+              <p>Подписка активирована. <Link to="/">Вернуться к курсам</Link></p>
+            </div>
+          } />
 
           <Route path="/my-courses" element={<MyCoursesPage />} />
           <Route path="/courses/:id/manage" element={<CourseManagePage />} />
           <Route path="/auth" element={<AuthPage />} />
+          
+          {/* ← ЗДЕСЬ ИЗМЕНЕНИЕ! Добавили userSubscriptions */}
           <Route
             path="/"
-            element={<Home courses={courses} loading={loading} />}
+            element={<Home courses={courses} userSubscriptions={userSubscriptions} loading={loading} />}
           />
+          
           <Route path="/courses/:id" element={<CourseDetails />} />
           <Route path="/create-course" element={<CreateCoursePage />} />
           <Route
@@ -1640,5 +1637,6 @@ function App() {
     </Router>
   );
 }
+
 
 export default App;
