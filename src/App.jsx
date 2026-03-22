@@ -1,20 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Link,
-  useParams,
-  useNavigate,
-  useLocation
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  useParams, 
+  useNavigate, 
+  Link 
 } from 'react-router-dom';
+
 import LessonPlayer from './components/LessonPlayer';
 import CourseManagePage from './components/CourseManagePage';
 import CourseCard from './components/CourseCard';
 import MyCoursesPage from './components/MyCoursesPage';
 
-
 const API_URL = 'https://bek-production-15ec.up.railway.app';
+
 
 function parseJwt(token) {
   if (!token) return null;
@@ -584,10 +581,7 @@ function CourseDetails() {
   };
 
 const handlePurchase = async () => {
-  if (hasAccess) {
-    setShowPaymentModal(false);
-    return;
-  }
+  if (hasAccess) return;
 
   try {
     const token = localStorage.getItem('jwtToken');
