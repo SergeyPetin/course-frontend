@@ -437,6 +437,28 @@ function CourseDetails() {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [isAuthor, setIsAuthor] = useState(false);
 
+  // 🔥🚀 НОВЫЙ КОД №1 — ВСТАВЬ ЗДЕСЬ (ПОСЛЕ state):
+  const checkSubscriptionNow = useCallback(async () => {
+    const token = localStorage.getItem('jwtToken');
+    if (!token || !id) return;
+    
+    try {
+      const response = await fetch(`${API_URL}/subscriptions/my`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const subs = await response.json();
+        const hasSub = subs.some(sub => sub.course?.id == id);
+        if (hasSub !== hasAccess) {
+          console.log('🔄 AUTO-UPDATE:', hasSub);
+          setHasAccess(hasSub);
+        }
+      }
+    } catch (e) {
+      console.error('Auto-check failed:', e);
+    }
+  }, [id, hasAccess]);
+
   // ✅ ТОЛЬКО 1 useEffect — ВСЁ ЗДЕСЬ!
   useEffect(() => {
     console.log('🎯 MAIN useEffect → id:', id);
@@ -502,6 +524,16 @@ function CourseDetails() {
     
     loadCourse();
   }, [id]);
+
+  // 🔥🚀 НОВЫЙ КОД №2 — ВСТАВЬ ЗДЕСЬ (ПОСЛЕ ГЛАВНОГО useEffect):
+  useEffect(() => {
+    if (!course || !id) return;
+    
+    // Проверяем каждые 5 секунд
+    const interval = setInterval(checkSubscriptionNow, 5000);
+    
+    return () => clearInterval(interval);
+  }, [course, id, checkSubscriptionNow]);
 
   const handleEdit = () => {
     if (!course) return;
