@@ -430,7 +430,6 @@ function CourseDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // было уже
   const [hasAccess, setHasAccess] = useState(false);
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -438,15 +437,20 @@ function CourseDetails() {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [isAuthor, setIsAuthor] = useState(false);
 
-  // 1) грузим курс + уроки
+  // ✅ ТОЛЬКО 1 useEffect — ВСЁ ЗДЕСЬ!
   useEffect(() => {
-    setLoading(true);
-
-    fetch(`${API_URL}/courses/${id}`)
-      .then((response) => response.json())
-      .then((data) => {
+    console.log('🎯 MAIN useEffect → id:', id);
+    
+    if (!id) return;
+    
+    const loadCourse = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_URL}/courses/${id}`);
+        const data = await response.json();
         setCourse(data);
-
+        
+        // Уроки
         const lessons = Array.isArray(data.lessons) ? data.lessons : [];
         if (lessons.length > 0) {
           const sorted = [...lessons].sort((a, b) => {
@@ -455,89 +459,49 @@ function CourseDetails() {
             return orderA - orderB;
           });
           setSelectedLesson(sorted[0]);
-        } else {
-          setSelectedLesson(null);
         }
-
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Ошибка загрузки курса', err);
+        
+        // Авторство
+        const token = localStorage.getItem('jwtToken');
+        if (token && data.author) {
+          const payload = parseJwt(token);
+          const email = payload?.sub || payload?.email;
+          const courseAuthorEmail = data.author.email || data.authorEmail;
+          const isOwner = !!courseAuthorEmail && !!email && courseAuthorEmail === email;
+          setIsAuthor(payload?.role === 'ADMIN' || isOwner);
+          if (isOwner || payload?.role === 'ADMIN') {
+            setHasAccess(true);
+            return;
+          }
+        }
+        
+        // Подписка
+        if (token) {
+          console.log('🔍 Checking subscription for course:', id);
+          try {
+            const subResponse = await fetch(`${API_URL}/subscriptions/my`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (subResponse.ok) {
+              const subs = await subResponse.json();
+              console.log('🔍 Found subscriptions:', subs.map(s => s.course?.id));
+              const hasSub = subs.some(sub => sub.course?.id == id);
+              console.log('🔍 RESULT hasAccess:', hasSub);
+              setHasAccess(hasSub);
+            }
+          } catch (e) {
+            console.error('🔍 Subscription check FAILED:', e);
+          }
+        }
+      } catch (err) {
+        console.error('Ошибка загрузки курса:', err);
         setLoading(false);
-      });
-  }, [id]);
-
-  // 2) определяем, автор ли текущий пользователь
-  useEffect(() => {
-    const token = localStorage.getItem('jwtToken');
-
-    if (!token || token === 'undefined' || !course) {
-      setIsAuthor(false);
-      return;
-    }
-
-    const payload = parseJwt(token);
-    if (!payload) {
-      setIsAuthor(false);
-      return;
-    }
-
-    const role = payload.role || null;
-    const email = payload.sub || payload.email || null;
-    const courseAuthorEmail =
-      (course.author && course.author.email) || course.authorEmail || null;
-
-    const isOwner =
-      !!courseAuthorEmail && !!email && courseAuthorEmail === email;
-    setIsAuthor(role === 'ADMIN' || isOwner);
-  }, [course]);
-
-useEffect(() => {
-  console.log('🚀 useEffect [id] STARTED! id=', id, 'course=', !!course);
-  if (isAuthor) {
-    setHasAccess(true);
-    return;
-  }
-
-  // Если нет course — ждём
-  if (!course) {
-    setHasAccess(false);
-    return;
-  }
-
-  const token = localStorage.getItem('jwtToken');
-  if (!token) {
-    setHasAccess(false);
-    return;
-  }
-
-  // 🔍 ПРОВЕРКА ПОДПИСКИ
-  const checkSubscription = async () => {
-    try {
-      console.log('🔍 Checking subscription for course:', id);
-      const response = await fetch(`${API_URL}/subscriptions/my`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const subs = await response.json();
-        console.log('🔍 Found subscriptions:', subs.map(s => s.course.id));
-        const hasSub = subs.some(sub => sub.course.id == id);
-        console.log('🔍 RESULT hasAccess:', hasSub);  // DEBUG!
-        setHasAccess(hasSub);
-      } else {
-        console.log('🔍 API error:', response.status);
-        setHasAccess(false);
       }
-    } catch (e) {
-      console.error('🔍 Subscription check FAILED:', e);
-      setHasAccess(false);
-    }
-  };
-
-  checkSubscription();
-}, [id]);
-
+    };
+    
+    loadCourse();
+  }, [id]);
 
   const handleEdit = () => {
     if (!course) return;
