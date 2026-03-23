@@ -421,94 +421,127 @@ function CourseDetails() {
 
   const [hasAccess, setHasAccess] = useState(false);
   const [course, setCourse] = useState(null);
+  const [lessons, setLessons] = useState([]);  // ← ОТДЕЛЬНОЕ состояние!
   const [loading, setLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [isAuthor, setIsAuthor] = useState(false);
-
-  // 🔥🚀 НОВЫЙ КОД №1 — ВСТАВЬ ЗДЕСЬ (ПОСЛЕ state):
-  const checkSubscriptionNow = useCallback(async () => {
-  const token = localStorage.getItem('jwtToken');
-  if (!token || !id) return;
-  
+  const parseJwt = (token) => {
   try {
-    const response = await fetch(`${API_URL}/subscriptions/my`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch (e) {
+    return null;
+  }
+};
+
+  // 🔥 ПРОВЕРКА ПОДПИСКИ (каждые 5 сек)
+  const checkSubscriptionNow = useCallback(async () => {
+    const token = localStorage.getItem('jwtToken');
+    if (!token || !id) return;
     
-    if (response.ok) {
-      const subs = await response.json();
-      const courseIds = subs.map(s => s.course?.id).filter(Boolean);
-      const hasSub = courseIds.includes(Number(id));
+    try {
+      const response = await fetch(`${API_URL}/subscriptions/my`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       
-      // 🔥 ЛОГИ ТОЛЬКО ПРИ ИЗМЕНЕНИИ
-      if (hasSub !== hasAccess) {
-        console.log('🔄 AUTO-UPDATE:', hasAccess, '→', hasSub, 'Course IDs:', courseIds);
-        setHasAccess(hasSub);
+      if (response.ok) {
+        const subs = await response.json();
+        const courseIds = subs.map(s => s.course?.id).filter(Boolean);
+        const hasSub = courseIds.includes(Number(id));
+        
+        if (hasSub !== hasAccess) {
+          console.log('🔄 AUTO-UPDATE:', hasAccess, '→', hasSub);
+          setHasAccess(hasSub);
+          
+          // 🔥 ЕСЛИ ПОЛУЧИЛ ДОСТУП — загружаем уроки!
+          if (hasSub && !lessons.length) {
+            loadLessons();
+          }
+        }
       }
+    } catch (e) {
+      console.error('Auto-check failed:', e);
+    }
+  }, [id, hasAccess, lessons.length]);
+
+  // 🔥 ЗАГРУЗКА УРОКОВ ОТДЕЛЬНО
+  const loadLessons = useCallback(async () => {
+  try {
+    const token = localStorage.getItem('jwtToken');
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    
+    const response = await fetch(`${API_URL}/courses/${id}/lessons`, { headers });
+    if (response.ok) {
+      const lessonsData = await response.json();
+      const sortedLessons = [...lessonsData].sort((a, b) =>  // ← lessonsData!
+        (a.orderNumber ?? a.id ?? 0) - (b.orderNumber ?? b.id ?? 0)
+      );
+      setLessons(sortedLessons);
+      setSelectedLesson(sortedLessons[0] || null);
+      console.log('📚 Загружены уроки:', sortedLessons.length);
     }
   } catch (e) {
-    console.error('Auto-check failed:', e);
+    console.error('Ошибка загрузки уроков:', e);
   }
-}, [id, hasAccess]);
+}, [id]);
 
-  // ✅ ТОЛЬКО 1 useEffect — ВСЁ ЗДЕСЬ!
+
+  // 🔥 ГЛАВНЫЙ useEffect — 3 шага
   useEffect(() => {
     console.log('🎯 MAIN useEffect → id:', id);
     
     if (!id) return;
-    
+
     const loadCourse = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_URL}/courses/${id}`);
-        const data = await response.json();
-        setCourse(data);
         
-        // Уроки
-        const lessons = Array.isArray(data.lessons) ? data.lessons : [];
-        if (lessons.length > 0) {
-          const sorted = [...lessons].sort((a, b) => {
-            const orderA = a.orderNumber ?? a.id ?? 0;
-            const orderB = b.orderNumber ?? b.id ?? 0;
-            return orderA - orderB;
-          });
-          setSelectedLesson(sorted[0]);
-        }
-        setLoading(false);
+        // 1️⃣ БАЗОВАЯ ИНФОРМАЦИЯ О КУРСЕ (без уроков)
+        const courseResponse = await fetch(`${API_URL}/courses/${id}`);
+        const courseData = await courseResponse.json();
+        setCourse(courseData);
         
-        // Авторство
+        // 2️⃣ ПРОВЕРКА АВТОРСТВА
         const token = localStorage.getItem('jwtToken');
-        if (token && data.author) {
+        if (token && courseData.author) {
           const payload = parseJwt(token);
           const email = payload?.sub || payload?.email;
-          const courseAuthorEmail = data.author.email || data.authorEmail;
+          const courseAuthorEmail = courseData.author.email || courseData.authorEmail;
           const isOwner = !!courseAuthorEmail && !!email && courseAuthorEmail === email;
-          setIsAuthor(payload?.role === 'ADMIN' || isOwner);
-          if (isOwner || payload?.role === 'ADMIN') {
+          const isAdmin = payload?.role === 'ADMIN';
+          setIsAuthor(isAdmin || isOwner);
+          
+          // Автору всегда доступ
+          if (isAdmin || isOwner) {
             setHasAccess(true);
+            loadLessons();  // Автор видит уроки сразу
+            setLoading(false);
             return;
           }
         }
         
-        // Подписка
+        // 3️⃣ ПРОВЕРКА ПОДПИСКИ
         if (token) {
           console.log('🔍 Checking subscription for course:', id);
-          try {
-            const subResponse = await fetch(`${API_URL}/subscriptions/my`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (subResponse.ok) {
-              const subs = await subResponse.json();
-              console.log('🔍 Found subscriptions:', subs.map(s => s.course?.id));
-              const hasSub = subs.some(sub => sub.course?.id == id);
-              console.log('🔍 RESULT hasAccess:', hasSub);
-              setHasAccess(hasSub);
+          const subResponse = await fetch(`${API_URL}/subscriptions/my`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (subResponse.ok) {
+            const subs = await subResponse.json();
+            console.log('🔍 Found subscriptions:', subs.map(s => s.course?.id));
+            const hasSub = subs.some(sub => sub.course?.id == id);
+            console.log('🔍 RESULT hasAccess:', hasSub);
+            setHasAccess(hasSub);
+            
+            // Если есть подписка — загружаем уроки
+            if (hasSub) {
+              loadLessons();
             }
-          } catch (e) {
-            console.error('🔍 Subscription check FAILED:', e);
           }
         }
+        
+        setLoading(false);
       } catch (err) {
         console.error('Ошибка загрузки курса:', err);
         setLoading(false);
@@ -516,21 +549,19 @@ function CourseDetails() {
     };
     
     loadCourse();
-  }, [id]);
+  }, [id, loadLessons]);
 
-  // 🔥🚀 НОВЫЙ КОД №2 — ВСТАВЬ ЗДЕСЬ (ПОСЛЕ ГЛАВНОГО useEffect):
+  // 🔥 АВТООБНОВЛЕНИЕ ПОДПИСКИ каждые 5 сек
   useEffect(() => {
     if (!course || !id) return;
-    
-    // Проверяем каждые 5 секунд
     const interval = setInterval(checkSubscriptionNow, 5000);
-    
     return () => clearInterval(interval);
   }, [course, id, checkSubscriptionNow]);
 
+  // ... handleEdit, handleDelete, handlePurchase — твои функции БЕЗ ИЗМЕНЕНИЙ
+
   const handleEdit = () => {
     if (!course) return;
-
     navigate('/create-course', {
       state: {
         courseToEdit: {
@@ -546,22 +577,15 @@ function CourseDetails() {
   };
 
   const handleDelete = async () => {
-    if (
-      !window.confirm('Точно удалить этот курс? Это действие нельзя отменить.')
-    ) {
+    if (!window.confirm('Точно удалить этот курс? Это действие нельзя отменить.')) {
       return;
     }
-
     try {
       const token = localStorage.getItem('jwtToken');
-
       const response = await fetch(`${API_URL}/courses/${id}`, {
         method: 'DELETE',
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` })
-        }
+        headers: { ...(token && { Authorization: `Bearer ${token}` }) }
       });
-
       if (response.ok) {
         alert('Курс удалён');
         window.dispatchEvent(new CustomEvent('courseCreated'));
@@ -576,46 +600,36 @@ function CourseDetails() {
     }
   };
 
-const handlePurchase = async () => {
-  if (hasAccess) return;
-
-  try {
-    const token = localStorage.getItem('jwtToken');
-    const response = await fetch(`${API_URL}/payments/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` })
-      },
-      body: JSON.stringify({ courseId: Number(id) })
-    });
-
-    const data = await response.json();
-    
-    if (response.ok && data.url) {
-      window.location.href = data.url;
-    } else {
-      console.error('Payment error:', data);
-      alert(`Ошибка оплаты: ${data.error || response.status}`);
+  const handlePurchase = async () => {
+    if (hasAccess) return;
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const response = await fetch(`${API_URL}/payments/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+        body: JSON.stringify({ courseId: Number(id) })
+      });
+      const data = await response.json();
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error('Payment error:', data);
+        alert(`Ошибка оплаты: ${data.error || response.status}`);
+      }
+    } catch (error) {
+      console.error('Payment network error:', error);
+      alert('Ошибка сети. Попробуйте позже.');
     }
-  } catch (error) {
-    console.error('Payment network error:', error);
-    alert('Ошибка сети. Попробуйте позже.');
-  }
-};
+  };
 
+  // 🔥 УРОКИ ИЗ ОТДЕЛЬНОГО состояния
+  const sortedLessons = [...lessons].sort((a, b) => 
+  (a.orderNumber ?? a.id ?? 0) - (b.orderNumber ?? b.id ?? 0)
+);
 
-  // сортируем уроки по orderNumber
-  const sortedLessons =
-    course && Array.isArray(course.lessons)
-      ? [...course.lessons].sort((a, b) => {
-          const orderA = a.orderNumber ?? a.id ?? 0;
-          const orderB = b.orderNumber ?? b.id ?? 0;
-          return orderA - orderB;
-        })
-      : [];
-
-  // удобный флаг: можно ли показывать уроки и плеер
   const canViewLessons = isAuthor || hasAccess;
 
   if (loading) {
