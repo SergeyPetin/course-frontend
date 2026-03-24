@@ -500,12 +500,6 @@ function CourseDetails() {
         const courseResponse = await fetch(`${API_URL}/courses/${id}`);
         const courseData = await courseResponse.json();
         setCourse(courseData);
-
-        console.log('=== DEBUG AUTHOR ===');
-console.log('courseData.author:', courseData.author);
-console.log('full courseData:', courseData);
-console.log('JWT payload:', parseJwt(localStorage.getItem('jwtToken')));
-console.log('===================');
         
         /// 2️⃣ ПРОВЕРКА АВТОРСТВА
 const token = localStorage.getItem('jwtToken');
