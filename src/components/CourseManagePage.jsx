@@ -180,7 +180,7 @@ function CourseManagePage() {
 
             {/* Bunny Video ID */}
             <input
-              placeholder="Kinescope Video ID (https://kinescope.io/ только -> tYRnav5vJgQNWiRThj8stz)"
+              placeholder="Kinescope Video ID (только -> tYRnav5vJgQNWiRThj8stz)"
               value={newLesson.videoId}
               onChange={(e) =>
                 setNewLesson({ ...newLesson, videoId: e.target.value })

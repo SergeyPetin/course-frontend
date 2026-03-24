@@ -803,56 +803,69 @@ if (token) {
                 )}
 
               {/* Кнопки автора / покупка */}
-              {isAuthor ? (
-  <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-    <Link
+              {isAuthor && (
+  <div className="author-buttons" style={{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+    marginBottom: 16,
+    padding: '0 12px'
+  }}>
+    <Link 
       to={`/courses/${course.id}/manage`}
       style={{
         background: 'linear-gradient(135deg, #10b981, #059669)',
         color: 'white',
-        padding: '14px 24px',
+        padding: '12px 20px',
         borderRadius: 12,
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: 600,
         textDecoration: 'none',
-        display: 'inline-flex',
-        alignItems: 'center'
+        textAlign: 'center',
+        display: 'block'
       }}
     >
       📋 Управление уроками
     </Link>
-    <button
-      onClick={handleEdit}
-      style={{
-        background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
-        border: 'none',
-        color: 'white',
-        padding: '14px 24px',
-        borderRadius: 12,
-        fontSize: 15,
-        fontWeight: 600,
-        cursor: 'pointer'
-      }}
-    >
-      ✏️ Редактировать курс
-    </button>
-    <button
-      onClick={handleDelete}
-      style={{
-        background: '#dc2626',
-        border: 'none',
-        color: 'white',
-        padding: '14px 20px',
-        borderRadius: 12,
-        fontSize: 15,
-        fontWeight: 600,
-        cursor: 'pointer'
-      }}
-    >
-      🗑 Удалить
-    </button>
+    <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+      <button
+        onClick={handleEdit}
+        style={{
+          background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+          border: 'none',
+          color: 'white',
+          padding: '10px 16px',
+          borderRadius: 12,
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: 'pointer',
+          flex: 1,
+          maxWidth: 140
+        }}
+      >
+        ✏️ Редактировать
+      </button>
+      <button
+        onClick={handleDelete}
+        style={{
+          background: '#dc2626',
+          border: 'none',
+          color: 'white',
+          padding: '10px 16px',
+          borderRadius: 12,
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: 'pointer',
+          flex: 1,
+          maxWidth: 140
+        }}
+      >
+        🗑 Удалить
+      </button>
+    </div>
   </div>
-) : (
+)}
+ : (
   <button
     onClick={handlePurchase}
     style={{
@@ -869,8 +882,7 @@ if (token) {
   >
     {hasAccess ? 'Открыть курс' : 'Купить курс'}
   </button>
-)}
-
+)
               {/* Блок уроков: либо показываем список, либо заглушку о покупке */}
               {canViewLessons ? (
                 sortedLessons.length > 0 ? (
@@ -1633,6 +1645,26 @@ function App() {
   }, []);
 
   return (
+  <>
+    <style>{`
+      * {
+        box-sizing: border-box;
+      }
+      
+      @media (max-width: 768px) {
+        html, body, #root {
+          overflow-x: hidden !important;
+          width: 100% !important;
+        }
+        
+        div:has(iframe[src*="kinescope.io"]) {
+          width: 100vw !important;
+          margin-left: calc(50% - 50vw) !important;
+          margin-right: calc(50% - 50vw) !important;
+        }
+      }
+    `}</style>
+    
     <Router>
       <div
         style={{
@@ -1657,7 +1689,6 @@ function App() {
           <Route path="/courses/:id/manage" element={<CourseManagePage />} />
           <Route path="/auth" element={<AuthPage />} />
           
-          {/* ← ЗДЕСЬ ИЗМЕНЕНИЕ! Добавили userSubscriptions */}
           <Route
             path="/"
             element={<Home courses={courses} userSubscriptions={userSubscriptions} loading={loading} />}
@@ -1674,7 +1705,9 @@ function App() {
         </Routes>
       </div>
     </Router>
-  );
+  </>
+);
+
 }
 
 
