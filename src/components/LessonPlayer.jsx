@@ -10,9 +10,9 @@ const LessonPlayer = ({ videoId }) => {
         overflow: 'hidden'
       }}
     >
-      <div style={{ position: 'relative', paddingTop: '56.25%' }}>
+      <div style={{ position: 'relative', paddingTop: '56.25%', width: '100%' }}>
         <iframe
-          src={`https://player.mediadelivery.net/embed/619827/${videoId}?autoplay=false&loop=false&muted=false&responsive=true`}
+          src={`https://kinescope.io/embed/${videoId}`}
           loading="lazy"
           style={{
             border: 0,
@@ -22,7 +22,8 @@ const LessonPlayer = ({ videoId }) => {
             height: '100%',
             width: '100%'
           }}
-          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+          allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope;"
+          frameBorder="0"
           allowFullScreen
         />
       </div>
@@ -31,3 +32,4 @@ const LessonPlayer = ({ videoId }) => {
 };
 
 export default LessonPlayer;
+

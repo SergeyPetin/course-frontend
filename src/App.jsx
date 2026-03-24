@@ -500,26 +500,57 @@ function CourseDetails() {
         const courseResponse = await fetch(`${API_URL}/courses/${id}`);
         const courseData = await courseResponse.json();
         setCourse(courseData);
+
+        console.log('=== DEBUG AUTHOR ===');
+console.log('courseData.author:', courseData.author);
+console.log('full courseData:', courseData);
+console.log('JWT payload:', parseJwt(localStorage.getItem('jwtToken')));
+console.log('===================');
         
-        // 2️⃣ ПРОВЕРКА АВТОРСТВА
-        const token = localStorage.getItem('jwtToken');
-        if (token && courseData.author) {
-          const payload = parseJwt(token);
-          const email = payload?.sub || payload?.email;
-          const courseAuthorEmail = courseData.author.email || courseData.authorEmail;
-          const isOwner = !!courseAuthorEmail && !!email && courseAuthorEmail === email;
-          const isAdmin = payload?.role === 'ADMIN';
-          setIsAuthor(isAdmin || isOwner);
-          
-          // Автору всегда доступ
-          if (isAdmin || isOwner) {
-            setHasAccess(true);
-            loadLessons();  // Автор видит уроки сразу
-            setLoading(false);
-            return;
-          }
-        }
-        
+        /// 2️⃣ ПРОВЕРКА АВТОРСТВА
+const token = localStorage.getItem('jwtToken');
+if (token) {
+  console.log('=== DEBUG AUTHOR ===');
+  console.log('courseData.author:', courseData.author);
+  console.log('full courseData:', courseData);
+  
+  const payload = parseJwt(token);
+  console.log('JWT payload:', payload);
+  
+  // Способ 1: по ID (самый надёжный)
+  const userId = payload?.id || payload?.userId;
+  const authorId = courseData.author?.id || courseData.authorId;
+  const isOwnerById = !!authorId && !!userId && authorId === userId;
+  
+  // Способ 2: по email (старый способ)
+  const email = payload?.sub || payload?.email || payload?.username;
+  const courseAuthorEmail = courseData.author?.email || courseData.authorEmail;
+  const isOwnerByEmail = !!courseAuthorEmail && !!email && courseAuthorEmail === email;
+  
+  // Способ 3: по роли
+  const isAdmin = payload?.role === 'ADMIN';
+  const isAuthorRole = payload?.role === 'AUTHOR';
+  
+  const isOwner = isOwnerById || isOwnerByEmail || isAuthorRole;
+  setIsAuthor(isAdmin || isOwner);
+  
+  console.log('author checks:', { 
+    userId, authorId, isOwnerById, 
+    email, courseAuthorEmail, isOwnerByEmail, 
+    isAdmin, isAuthorRole, isOwner 
+  });
+  console.log('setIsAuthor:', isAdmin || isOwner);
+  console.log('===================');
+  
+  // Автору всегда доступ
+  if (isAdmin || isOwner) {
+    setHasAccess(true);
+    loadLessons();  // Автор видит уроки сразу
+    setLoading(false);
+    return;
+  }
+}
+   
         // 3️⃣ ПРОВЕРКА ПОДПИСКИ
         if (token) {
           console.log('🔍 Checking subscription for course:', id);
