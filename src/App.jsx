@@ -632,7 +632,7 @@ if (token) {
     if (hasAccess) return;
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`${API_URL}/payments/create`, {
+      const response = await fetch(`${API_URL}/api/payments/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
