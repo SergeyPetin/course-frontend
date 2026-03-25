@@ -576,12 +576,15 @@ if (token) {
     loadCourse();
   }, [id, loadLessons]);
 
-  // 🔥 АВТООБНОВЛЕНИЕ ПОДПИСКИ каждые 5 сек
   useEffect(() => {
-    if (!course || !id) return;
-    const interval = setInterval(checkSubscriptionNow, 5000);
-    return () => clearInterval(interval);
-  }, [course, id, checkSubscriptionNow]);
+  if (!course || !id) return;
+  
+  // Только ОДИН раз проверяем подписку
+  const checkOnce = async () => {
+    await checkSubscriptionNow();
+  };
+  checkOnce();
+}, [course, id, checkSubscriptionNow]);
 
   // ... handleEdit, handleDelete, handlePurchase — твои функции БЕЗ ИЗМЕНЕНИЙ
 
