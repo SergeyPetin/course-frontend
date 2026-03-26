@@ -640,34 +640,30 @@ function CourseDetails() {
   };
 
   const handleDelete = async () => {
-    if (
-      !window.confirm(
-        'Точно удалить этот курс? Это действие нельзя отменить.'
-      )
-    ) {
-      return;
+  if (!window.confirm('Точно удалить этот курс? Это действие нельзя отменить.')) {
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('jwtToken');
+    const response = await fetch(`${API_URL}/courses/${id}`, {
+      method: 'DELETE',
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) }
+    });
+
+    if (response.ok || response.status === 204) {
+      alert('Курс удалён');
+      window.dispatchEvent(new CustomEvent('courseCreated'));
+      navigate('/');
+    } else {
+      const text = await response.text();
+      alert(`Ошибка удаления курса: ${response.status} ${text || ''}`);
     }
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`${API_URL}/courses/${id}`, {
-        method: 'DELETE',
-        headers: { ...(token && { Authorization: `Bearer ${token}` }) }
-      });
-      if (response.ok) {
-        alert('Курс удалён');
-        window.dispatchEvent(new CustomEvent('courseCreated'));
-        navigate('/');
-      } else {
-        const text = await response.text();
-        alert(
-          `Ошибка удаления: ${response.status} ${text || ''}`
-        );
-      }
-    } catch (e) {
-      console.error('Сетевая ошибка при удалении курса', e);
-      alert('Сетевая ошибка при удалении курса');
-    }
-  };
+  } catch (e) {
+    console.error('Сетевая ошибка при удалении курса', e);
+    alert('Сетевая ошибка при удалении курса');
+  }
+};
 
   const handlePurchase = async () => {
     if (hasAccess) return;
