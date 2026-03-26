@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  BrowserRouter as Router, 
-  Routes, 
-  Route, 
-  Link, 
-  useParams, 
-  useNavigate, 
-  useLocation 
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useParams,
+  useNavigate,
+  useLocation
 } from 'react-router-dom';
 
 import LessonPlayer from './components/LessonPlayer';
@@ -16,15 +16,16 @@ import MyCoursesPage from './components/MyCoursesPage';
 
 const API_URL = 'https://bek-production-15ec.up.railway.app';
 
-
 function parseJwt(token) {
   if (!token) return null;
   try {
     const base64Url = token.split('.')[1];
     if (!base64Url) return null;
-
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
+    const padded = base64.padEnd(
+      base64.length + (4 - (base64.length % 4)) % 4,
+      '='
+    );
     const json = atob(padded);
     return JSON.parse(json);
   } catch (e) {
@@ -78,15 +79,17 @@ function Header() {
     >
       <div
         style={{
-    maxWidth: 960,
-    margin: '0 auto',
-    padding: '16px 20px',
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 16
-  }}
+          width: '100%',
+          maxWidth: 960,
+          margin: '0 auto',
+          padding: '16px 20px',
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16
+        }}
       >
         <Link
           to="/"
@@ -106,10 +109,16 @@ function Header() {
           <Link to="/" style={{ color: '#e5e7eb', textDecoration: 'none' }}>
             Курсы
           </Link>
-          <Link to="/my-courses" style={{ color: '#e5e7eb', textDecoration: 'none' }}>
-    Мои курсы
-  </Link>
-          <Link to="/about" style={{ color: '#9ca3af', textDecoration: 'none' }}>
+          <Link
+            to="/my-courses"
+            style={{ color: '#e5e7eb', textDecoration: 'none' }}
+          >
+            Мои курсы
+          </Link>
+          <Link
+            to="/about"
+            style={{ color: '#9ca3af', textDecoration: 'none' }}
+          >
             О нас
           </Link>
         </nav>
@@ -139,7 +148,9 @@ function Header() {
 
           {userRole ? (
             <>
-              <span style={{ color: '#e5e7eb', fontSize: 14 }}>👤 {email}</span>
+              <span style={{ color: '#e5e7eb', fontSize: 14 }}>
+                👤 {email}
+              </span>
               <button
                 onClick={handleLogout}
                 style={{
@@ -219,7 +230,11 @@ function AuthPage() {
         }
       } else {
         const errorText = await response.text();
-        alert(`Ошибка ${response.status}${errorText ? `: ${errorText}` : ''}`);
+        alert(
+          `Ошибка ${response.status}${
+            errorText ? `: ${errorText}` : ''
+          }`
+        );
       }
     } catch (error) {
       alert('❌ Сервер недоступен');
@@ -347,7 +362,11 @@ function AuthPage() {
               cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >
-            {loading ? 'Загрузка...' : isLogin ? 'Войти' : 'Зарегистрироваться'}
+            {loading
+              ? 'Загрузка...'
+              : isLogin
+              ? 'Войти'
+              : 'Зарегистрироваться'}
           </button>
         </form>
 
@@ -371,40 +390,72 @@ function AuthPage() {
             cursor: 'pointer'
           }}
         >
-          {isLogin ? 'Нет аккаунта? Регистрация' : 'Уже есть аккаунт? Войти'}
+          {isLogin
+            ? 'Нет аккаунта? Регистрация'
+            : 'Уже есть аккаунт? Войти'}
         </button>
       </div>
     </div>
   );
 }
 
-function Home({ courses, userSubscriptions, loading }) {  // ← + userSubscriptions
-  const isPurchased = (courseId) => userSubscriptions.includes(courseId);  // ← НОВОЕ
-  
+function Home({ courses, userSubscriptions, loading }) {
+  const isPurchased = (courseId) => userSubscriptions.includes(courseId);
+
   return (
     <div style={{ padding: '40px 0' }}>
-      <div style={{ maxWidth: 960, margin: '0 auto', color: 'white', padding: '0 20px' }}>
-        <h1 style={{ fontSize: 32, marginBottom: 24, textAlign: 'center' }}>
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 960,
+          margin: '0 auto',
+          boxSizing: 'border-box',
+          color: 'white',
+          padding: '0 20px'
+        }}
+      >
+        <h1
+          style={{
+            fontSize: 32,
+            marginBottom: 24,
+            textAlign: 'center'
+          }}
+        >
           Курсы по программированию
         </h1>
 
         {loading && (
-          <div style={{ textAlign: 'center', padding: 40 }}>Загрузка курсов...</div>
+          <div style={{ textAlign: 'center', padding: 40 }}>
+            Загрузка курсов...
+          </div>
         )}
 
         {!loading && courses.length === 0 && (
-          <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af' }}>
+          <div
+            style={{
+              textAlign: 'center',
+              padding: 40,
+              color: '#9ca3af'
+            }}
+          >
             Нет доступных курсов
           </div>
         )}
 
         {!loading && courses.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 24 }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'repeat(auto-fill, minmax(260px, 1fr))',
+              gap: 24
+            }}
+          >
             {courses.map((course) => (
-              <CourseCard 
-                key={course.id} 
-                course={course} 
-                isPurchased={isPurchased(course.id)}  // ← ГЛАВНОЕ ИЗМЕНЕНИЕ!
+              <CourseCard
+                key={course.id}
+                course={course}
+                isPurchased={isPurchased(course.id)}
               />
             ))}
           </div>
@@ -414,46 +465,44 @@ function Home({ courses, userSubscriptions, loading }) {  // ← + userSubscript
   );
 }
 
-
 function CourseDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [hasAccess, setHasAccess] = useState(false);
   const [course, setCourse] = useState(null);
-  const [lessons, setLessons] = useState([]);  // ← ОТДЕЛЬНОЕ состояние!
+  const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [isAuthor, setIsAuthor] = useState(false);
-  const parseJwt = (token) => {
-  try {
-    return JSON.parse(atob(token.split('.')[1]));
-  } catch (e) {
-    return null;
-  }
-};
 
-  // 🔥 ПРОВЕРКА ПОДПИСКИ (каждые 5 сек)
+  const parseJwtInline = (token) => {
+    try {
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch (e) {
+      return null;
+    }
+  };
+
   const checkSubscriptionNow = useCallback(async () => {
     const token = localStorage.getItem('jwtToken');
     if (!token || !id) return;
-    
+
     try {
       const response = await fetch(`${API_URL}/subscriptions/my`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       if (response.ok) {
         const subs = await response.json();
-        const courseIds = subs.map(s => s.course?.id).filter(Boolean);
+        const courseIds = subs
+          .map((s) => s.courseId ?? s.course?.id)
+          .filter(Boolean);
         const hasSub = courseIds.includes(Number(id));
-        
+
         if (hasSub !== hasAccess) {
-          console.log('🔄 AUTO-UPDATE:', hasAccess, '→', hasSub);
           setHasAccess(hasSub);
-          
-          // 🔥 ЕСЛИ ПОЛУЧИЛ ДОСТУП — загружаем уроки!
           if (hasSub && !lessons.length) {
             loadLessons();
           }
@@ -464,129 +513,115 @@ function CourseDetails() {
     }
   }, [id, hasAccess, lessons.length]);
 
-  // 🔥 ЗАГРУЗКА УРОКОВ ОТДЕЛЬНО
   const loadLessons = useCallback(async () => {
-  try {
-    const token = localStorage.getItem('jwtToken');
-    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-    
-    const response = await fetch(`${API_URL}/courses/${id}/lessons`, { headers });
-    if (response.ok) {
-      const lessonsData = await response.json();
-      const sortedLessons = [...lessonsData].sort((a, b) =>  // ← lessonsData!
-        (a.orderNumber ?? a.id ?? 0) - (b.orderNumber ?? b.id ?? 0)
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const response = await fetch(
+        `${API_URL}/courses/${id}/lessons`,
+        { headers }
       );
-      setLessons(sortedLessons);
-      setSelectedLesson(sortedLessons[0] || null);
-      console.log('📚 Загружены уроки:', sortedLessons.length);
+      if (response.ok) {
+        const lessonsData = await response.json();
+        const sortedLessons = [...lessonsData].sort(
+          (a, b) =>
+            (a.orderNumber ?? a.id ?? 0) -
+            (b.orderNumber ?? b.id ?? 0)
+        );
+        setLessons(sortedLessons);
+        setSelectedLesson(sortedLessons[0] || null);
+      }
+    } catch (e) {
+      console.error('Ошибка загрузки уроков:', e);
     }
-  } catch (e) {
-    console.error('Ошибка загрузки уроков:', e);
-  }
-}, [id]);
+  }, [id]);
 
-
-  // 🔥 ГЛАВНЫЙ useEffect — 3 шага
   useEffect(() => {
-    console.log('🎯 MAIN useEffect → id:', id);
-    
     if (!id) return;
 
     const loadCourse = async () => {
       try {
         setLoading(true);
-        
-        // 1️⃣ БАЗОВАЯ ИНФОРМАЦИЯ О КУРСЕ (без уроков)
+
         const courseResponse = await fetch(`${API_URL}/courses/${id}`);
         const courseData = await courseResponse.json();
         setCourse(courseData);
-        
-        /// 2️⃣ ПРОВЕРКА АВТОРСТВА
-const token = localStorage.getItem('jwtToken');
-if (token) {
-  console.log('=== DEBUG AUTHOR ===');
-  console.log('courseData.author:', courseData.author);
-  console.log('full courseData:', courseData);
-  
-  const payload = parseJwt(token);
-  console.log('JWT payload:', payload);
-  
-  // Способ 1: по ID (самый надёжный)
-  const userId = payload?.id || payload?.userId;
-  const authorId = courseData.author?.id || courseData.authorId;
-  const isOwnerById = !!authorId && !!userId && authorId === userId;
-  
-  // Способ 2: по email (старый способ)
-  const email = payload?.sub || payload?.email || payload?.username;
-  const courseAuthorEmail = courseData.author?.email || courseData.authorEmail;
-  const isOwnerByEmail = !!courseAuthorEmail && !!email && courseAuthorEmail === email;
-  
-  // Способ 3: по роли
-  const isAdmin = payload?.role === 'ADMIN';
-  const isAuthorRole = payload?.role === 'AUTHOR';
-  
-  const isOwner = isOwnerById || isOwnerByEmail || isAuthorRole;
-  setIsAuthor(isAdmin || isOwner);
-  
-  console.log('author checks:', { 
-    userId, authorId, isOwnerById, 
-    email, courseAuthorEmail, isOwnerByEmail, 
-    isAdmin, isAuthorRole, isOwner 
-  });
-  console.log('setIsAuthor:', isAdmin || isOwner);
-  console.log('===================');
-  
-  // Автору всегда доступ
-  if (isAdmin || isOwner) {
-    setHasAccess(true);
-    loadLessons();  // Автор видит уроки сразу
-    setLoading(false);
-    return;
-  }
-}
-   
-        // 3️⃣ ПРОВЕРКА ПОДПИСКИ
+
+        const token = localStorage.getItem('jwtToken');
         if (token) {
-          console.log('🔍 Checking subscription for course:', id);
-          const subResponse = await fetch(`${API_URL}/subscriptions/my`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          
+          const payload = parseJwtInline(token);
+
+          const userId = payload?.id || payload?.userId;
+          const authorId =
+            courseData.author?.id || courseData.authorId;
+          const isOwnerById =
+            !!authorId && !!userId && authorId === userId;
+
+          const email =
+            payload?.sub || payload?.email || payload?.username;
+          const courseAuthorEmail =
+            courseData.author?.email || courseData.authorEmail;
+          const isOwnerByEmail =
+            !!courseAuthorEmail &&
+            !!email &&
+            courseAuthorEmail === email;
+
+          const isAdmin = payload?.role === 'ADMIN';
+          const isAuthorRole = payload?.role === 'AUTHOR';
+
+          const isOwner =
+            isOwnerById || isOwnerByEmail || isAuthorRole;
+          setIsAuthor(isAdmin || isOwner);
+
+          if (isAdmin || isOwner) {
+            setHasAccess(true);
+            loadLessons();
+            setLoading(false);
+            return;
+          }
+        }
+
+        const token2 = localStorage.getItem('jwtToken');
+        if (token2) {
+          const subResponse = await fetch(
+            `${API_URL}/subscriptions/my`,
+            {
+              headers: { Authorization: `Bearer ${token2}` }
+            }
+          );
+
           if (subResponse.ok) {
             const subs = await subResponse.json();
-            console.log('🔍 Found subscriptions:', subs.map(s => s.course?.id));
-            const hasSub = subs.some(sub => sub.course?.id == id);
-            console.log('🔍 RESULT hasAccess:', hasSub);
+            const hasSub = subs.some(
+              (sub) =>
+                sub.courseId == id || sub.course?.id == id
+            );
             setHasAccess(hasSub);
-            
-            // Если есть подписка — загружаем уроки
+
             if (hasSub) {
               loadLessons();
             }
           }
         }
-        
+
         setLoading(false);
       } catch (err) {
         console.error('Ошибка загрузки курса:', err);
         setLoading(false);
       }
     };
-    
+
     loadCourse();
   }, [id, loadLessons]);
 
   useEffect(() => {
-  if (!course || !id) return;
-  
-  // Только ОДИН раз проверяем подписку
-  const checkOnce = async () => {
-    await checkSubscriptionNow();
-  };
-  checkOnce();
-}, [course, id, checkSubscriptionNow]);
-
-  // ... handleEdit, handleDelete, handlePurchase — твои функции БЕЗ ИЗМЕНЕНИЙ
+    if (!course || !id) return;
+    const checkOnce = async () => {
+      await checkSubscriptionNow();
+    };
+    checkOnce();
+  }, [course, id, checkSubscriptionNow]);
 
   const handleEdit = () => {
     if (!course) return;
@@ -605,7 +640,11 @@ if (token) {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Точно удалить этот курс? Это действие нельзя отменить.')) {
+    if (
+      !window.confirm(
+        'Точно удалить этот курс? Это действие нельзя отменить.'
+      )
+    ) {
       return;
     }
     try {
@@ -620,7 +659,9 @@ if (token) {
         navigate('/');
       } else {
         const text = await response.text();
-        alert(`Ошибка удаления: ${response.status} ${text || ''}`);
+        alert(
+          `Ошибка удаления: ${response.status} ${text || ''}`
+        );
       }
     } catch (e) {
       console.error('Сетевая ошибка при удалении курса', e);
@@ -632,14 +673,17 @@ if (token) {
     if (hasAccess) return;
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`${API_URL}/api/payments/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
-        },
-        body: JSON.stringify({ courseId: Number(id) })
-      });
+      const response = await fetch(
+        `${API_URL}/api/payments/create`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` })
+          },
+          body: JSON.stringify({ courseId: Number(id) })
+        }
+      );
       const data = await response.json();
       if (response.ok && data.url) {
         window.location.href = data.url;
@@ -653,16 +697,23 @@ if (token) {
     }
   };
 
-  // 🔥 УРОКИ ИЗ ОТДЕЛЬНОГО состояния
-  const sortedLessons = [...lessons].sort((a, b) => 
-  (a.orderNumber ?? a.id ?? 0) - (b.orderNumber ?? b.id ?? 0)
-);
+  const sortedLessons = [...lessons].sort(
+    (a, b) =>
+      (a.orderNumber ?? a.id ?? 0) -
+      (b.orderNumber ?? b.id ?? 0)
+  );
 
   const canViewLessons = isAuthor || hasAccess;
 
   if (loading) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: '#9ca3af' }}>
+      <div
+        style={{
+          padding: 40,
+          textAlign: 'center',
+          color: '#9ca3af'
+        }}
+      >
         Загрузка...
       </div>
     );
@@ -670,7 +721,13 @@ if (token) {
 
   if (!course) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: '#9ca3af' }}>
+      <div
+        style={{
+          padding: 40,
+          textAlign: 'center',
+          color: '#9ca3af'
+        }}
+      >
         Курс не найден
       </div>
     );
@@ -687,10 +744,12 @@ if (token) {
       >
         <div
           style={{
+            width: '100%',
             maxWidth: 1000,
             margin: '0 auto',
             color: 'white',
-            padding: '0 20px'
+            padding: '0 20px',
+            boxSizing: 'border-box'
           }}
         >
           <Link
@@ -716,7 +775,6 @@ if (token) {
               alignItems: 'start'
             }}
           >
-            {/* Левая колонка: инфо + плеер + уроки */}
             <div>
               <h1
                 style={{
@@ -761,17 +819,20 @@ if (token) {
                   'Подробное описание курса будет добавлено в ближайшее время.'}
               </p>
 
-              {/* Превью-ролик с YouTube — видно всем */}
               {course.previewVideoUrl && (
                 <div style={{ marginBottom: 32 }}>
                   <iframe
-                    key={`${course.id}-${course.previewVideoUrl || 'empty'}-${Date.now()}`}
+                    key={`${course.id}-${
+                      course.previewVideoUrl || 'empty'
+                    }-${Date.now()}`}
                     width="100%"
                     height="315"
                     src={
                       course.previewVideoUrl
-                        ? course.previewVideoUrl.replace('watch?v=', 'embed/') +
-                          `?v=${Date.now()}`
+                        ? course.previewVideoUrl.replace(
+                            'watch?v=',
+                            'embed/'
+                          ) + `?v=${Date.now()}`
                         : ''
                     }
                     title="Промо видео"
@@ -783,8 +844,6 @@ if (token) {
                 </div>
               )}
 
-              {/* HLS-плеер с уроком — только если есть доступ.
-                  И БЕЗ автозапуска (autoPlay={false}). */}
               {canViewLessons &&
                 selectedLesson &&
                 selectedLesson.videoId && (
@@ -805,88 +864,109 @@ if (token) {
                   </div>
                 )}
 
-              {/* Кнопки автора / покупка */}
-              {isAuthor && (
-  <div className="author-buttons" style={{
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
-    marginBottom: 16,
-    padding: '0 12px'
-  }}>
-    <Link 
-      to={`/courses/${course.id}/manage`}
-      style={{
-        background: 'linear-gradient(135deg, #10b981, #059669)',
-        color: 'white',
-        padding: '12px 20px',
-        borderRadius: 12,
-        fontSize: 14,
-        fontWeight: 600,
-        textDecoration: 'none',
-        textAlign: 'center',
-        display: 'block'
-      }}
-    >
-      📋 Управление уроками
-    </Link>
-    <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-      <button
-        onClick={handleEdit}
-        style={{
-          background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
-          border: 'none',
-          color: 'white',
-          padding: '10px 16px',
-          borderRadius: 12,
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: 'pointer',
-          flex: 1,
-          maxWidth: 140
-        }}
-      >
-        ✏️ Редактировать
-      </button>
-      <button
-        onClick={handleDelete}
-        style={{
-          background: '#dc2626',
-          border: 'none',
-          color: 'white',
-          padding: '10px 16px',
-          borderRadius: 12,
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: 'pointer',
-          flex: 1,
-          maxWidth: 140
-        }}
-      >
-        🗑 Удалить
-      </button>
-    </div>
-  </div>
-)}
- : (
-  <button
-    onClick={handlePurchase}
-    style={{
-      background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-      border: 'none',
-      color: 'white',
-      padding: '16px 32px',
-      borderRadius: 12,
-      fontSize: 16,
-      fontWeight: 600,
-      cursor: 'pointer',
-      boxShadow: '0 12px 30px rgba(34,197,94,0.4)'
-    }}
-  >
-    {hasAccess ? 'Открыть курс' : 'Купить курс'}
-  </button>
-)
-              {/* Блок уроков: либо показываем список, либо заглушку о покупке */}
+              {isAuthor ? (
+                <div
+                  className="author-buttons"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                    marginBottom: 16,
+                    padding: '0 12px',
+                    boxSizing: 'border-box',
+                    width: '100%',
+                    maxWidth: 480,
+                    marginLeft: 'auto',
+                    marginRight: 'auto'
+                  }}
+                >
+                  <Link
+                    to={`/courses/${course.id}/manage`}
+                    style={{
+                      background:
+                        'linear-gradient(135deg, #10b981, #059669)',
+                      color: 'white',
+                      padding: '12px 20px',
+                      borderRadius: 12,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      textAlign: 'center',
+                      display: 'block',
+                      width: '100%',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    📋 Управление уроками
+                  </Link>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 8,
+                      justifyContent: 'center',
+                      width: '100%'
+                    }}
+                  >
+                    <button
+                      onClick={handleEdit}
+                      style={{
+                        background:
+                          'linear-gradient(135deg, #38bdf8, #6366f1)',
+                        border: 'none',
+                        color: 'white',
+                        padding: '10px 16px',
+                        borderRadius: 12,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        flex: 1,
+                        maxWidth: 140,
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      ✏️ Редактировать
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      style={{
+                        background: '#dc2626',
+                        border: 'none',
+                        color: 'white',
+                        padding: '10px 16px',
+                        borderRadius: 12,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        flex: 1,
+                        maxWidth: 140,
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      🗑 Удалить
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={handlePurchase}
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #22c55e, #16a34a)',
+                    border: 'none',
+                    color: 'white',
+                    padding: '16px 32px',
+                    borderRadius: 12,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow:
+                      '0 12px 30px rgba(34,197,94,0.4)'
+                  }}
+                >
+                  {hasAccess ? 'Открыть курс' : 'Купить курс'}
+                </button>
+              )}
+
               {canViewLessons ? (
                 sortedLessons.length > 0 ? (
                   <div style={{ marginTop: 40 }}>
@@ -909,20 +989,25 @@ if (token) {
                       {sortedLessons.map((lesson, index) => (
                         <div
                           key={lesson.id}
-                          onClick={() => setSelectedLesson(lesson)}
+                          onClick={() =>
+                            setSelectedLesson(lesson)
+                          }
                           style={{
                             padding: 16,
                             background: '#020617',
                             borderRadius: 12,
-                            borderLeft: '3px solid #38bdf8',
+                            borderLeft:
+                              '3px solid #38bdf8',
                             cursor: 'pointer',
                             transition: 'background 0.2s'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#1e293b';
+                            e.currentTarget.style.background =
+                              '#1e293b';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#020617';
+                            e.currentTarget.style.background =
+                              '#020617';
                           }}
                         >
                           <div
@@ -958,13 +1043,15 @@ if (token) {
                               fontSize: 12,
                               color:
                                 selectedLesson &&
-                                selectedLesson.id === lesson.id
+                                selectedLesson.id ===
+                                  lesson.id
                                   ? '#22c55e'
                                   : '#9ca3af'
                             }}
                           >
                             {selectedLesson &&
-                            selectedLesson.id === lesson.id
+                            selectedLesson.id ===
+                              lesson.id
                               ? '▶ Сейчас воспроизводится'
                               : 'Нажмите, чтобы воспроизвести'}
                           </div>
@@ -982,7 +1069,12 @@ if (token) {
                       textAlign: 'center'
                     }}
                   >
-                    <div style={{ color: '#9ca3af', fontSize: 16 }}>
+                    <div
+                      style={{
+                        color: '#9ca3af',
+                        fontSize: 16
+                      }}
+                    >
                       Уроки скоро появятся
                     </div>
                   </div>
@@ -1004,7 +1096,8 @@ if (token) {
                       marginBottom: 8
                     }}
                   >
-                    Уроки доступны только после покупки курса.
+                    Уроки доступны только после покупки
+                    курса.
                   </div>
                   <div
                     style={{
@@ -1012,14 +1105,13 @@ if (token) {
                       fontSize: 14
                     }}
                   >
-                    Посмотрите превью‑видео и описание, затем нажмите
-                    «Купить курс».
+                    Посмотрите превью‑видео и описание,
+                    затем нажмите «Купить курс».
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Правая колонка: автор */}
             <div
               style={{
                 background: '#020617',
@@ -1045,7 +1137,8 @@ if (token) {
                       marginBottom: 8
                     }}
                   >
-                    {course.author.fullName || course.author.email}
+                    {course.author.fullName ||
+                      course.author.email}
                   </div>
                   <div
                     style={{
@@ -1220,7 +1313,6 @@ if (token) {
   );
 }
 
-
 function CreateCoursePage() {
   const location = useLocation();
   const [formData, setFormData] = useState({
@@ -1375,21 +1467,28 @@ function CreateCoursePage() {
               type="text"
               value={formData.title}
               onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
+                setFormData({
+                  ...formData,
+                  title: e.target.value
+                })
               }
               required
               style={{
                 width: '100%',
                 padding: '14px 16px',
                 background: '#0f172a',
-                border: '1px solid rgba(148,163,184,0.3)',
+                border:
+                  '1px solid rgba(148,163,184,0.3)',
                 borderRadius: 12,
                 color: '#e5e7eb',
                 fontSize: 16
               }}
-              onFocus={(e) => (e.target.style.borderColor = '#38bdf8')}
+              onFocus={(e) =>
+                (e.target.style.borderColor = '#38bdf8')
+              }
               onBlur={(e) =>
-                (e.target.style.borderColor = 'rgba(148,163,184,0.3)')
+                (e.target.style.borderColor =
+                  'rgba(148,163,184,0.3)')
               }
             />
           </div>
@@ -1408,23 +1507,30 @@ function CreateCoursePage() {
             <textarea
               value={formData.description}
               onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
+                setFormData({
+                  ...formData,
+                  description: e.target.value
+                })
               }
               rows="4"
               style={{
                 width: '100%',
                 padding: '14px 16px',
                 background: '#0f172a',
-                border: '1px solid rgba(148,163,184,0.3)',
+                border:
+                  '1px solid rgba(148,163,184,0.3)',
                 borderRadius: 12,
                 color: '#e5e7eb',
                 fontSize: 16,
                 resize: 'vertical',
                 minHeight: 100
               }}
-              onFocus={(e) => (e.target.style.borderColor = '#38bdf8')}
+              onFocus={(e) =>
+                (e.target.style.borderColor = '#38bdf8')
+              }
               onBlur={(e) =>
-                (e.target.style.borderColor = 'rgba(148,163,184,0.3)')
+                (e.target.style.borderColor =
+                  'rgba(148,163,184,0.3)')
               }
             />
           </div>
@@ -1444,7 +1550,10 @@ function CreateCoursePage() {
               type="number"
               value={formData.price}
               onChange={(e) =>
-                setFormData({ ...formData, price: e.target.value })
+                setFormData({
+                  ...formData,
+                  price: e.target.value
+                })
               }
               min="0"
               step="1"
@@ -1453,7 +1562,8 @@ function CreateCoursePage() {
                 width: '100%',
                 padding: '14px 16px',
                 background: '#0f172a',
-                border: '1px solid rgba(148,163,184,0.3)',
+                border:
+                  '1px solid rgba(148,163,184,0.3)',
                 borderRadius: 12,
                 color: '#22c55e',
                 fontSize: 16,
@@ -1464,7 +1574,8 @@ function CreateCoursePage() {
                 e.target.style.outline = 'none';
               }}
               onBlur={(e) =>
-                (e.target.style.borderColor = 'rgba(148,163,184,0.3)')
+                (e.target.style.borderColor =
+                  'rgba(148,163,184,0.3)')
               }
             />
           </div>
@@ -1494,14 +1605,18 @@ function CreateCoursePage() {
                 width: '100%',
                 padding: '14px 16px',
                 background: '#0f172a',
-                border: '1px solid rgba(148,163,184,0.3)',
+                border:
+                  '1px solid rgba(148,163,184,0.3)',
                 borderRadius: 12,
                 color: '#e5e7eb',
                 fontSize: 16
               }}
-              onFocus={(e) => (e.target.style.borderColor = '#38bdf8')}
+              onFocus={(e) =>
+                (e.target.style.borderColor = '#38bdf8')
+              }
               onBlur={(e) =>
-                (e.target.style.borderColor = 'rgba(148,163,184,0.3)')
+                (e.target.style.borderColor =
+                  'rgba(148,163,184,0.3)')
               }
             />
           </div>
@@ -1531,14 +1646,18 @@ function CreateCoursePage() {
                 width: '100%',
                 padding: '14px 16px',
                 background: '#0f172a',
-                border: '1px solid rgba(148,163,184,0.3)',
+                border:
+                  '1px solid rgba(148,163,184,0.3)',
                 borderRadius: 12,
                 color: '#e5e7eb',
                 fontSize: 16
               }}
-              onFocus={(e) => (e.target.style.borderColor = '#38bdf8')}
+              onFocus={(e) =>
+                (e.target.style.borderColor = '#38bdf8')
+              }
               onBlur={(e) =>
-                (e.target.style.borderColor = 'rgba(148,163,184,0.3)')
+                (e.target.style.borderColor =
+                  'rgba(148,163,184,0.3)')
               }
             />
           </div>
@@ -1596,7 +1715,7 @@ function CreateCoursePage() {
 function App() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userSubscriptions, setUserSubscriptions] = useState([]);  // ← НОВОЕ!
+  const [userSubscriptions, setUserSubscriptions] = useState([]);
 
   useEffect(() => {
     const loadCourses = () => {
@@ -1620,19 +1739,21 @@ function App() {
 
     loadCourses();
 
-    // ← НОВЫЙ useEffect для подписок!
     const token = localStorage.getItem('jwtToken');
     if (token) {
-      fetch(`${API_URL}/subscriptions/my`, { 
-        headers: { Authorization: `Bearer ${token}` } 
+      fetch(`${API_URL}/subscriptions/my`, {
+        headers: { Authorization: `Bearer ${token}` }
       })
-      .then(res => res.json())
-      .then(subs => {
-        const ids = subs.map(s => s.course?.id || s.courseId);
-        setUserSubscriptions(ids);
-        console.log('📦 Загружены подписки:', ids);
-      })
-      .catch(err => console.error('Ошибка подписок:', err));
+        .then((res) => res.json())
+        .then((subs) => {
+          const ids = subs.map(
+            (s) => s.course?.id || s.courseId
+          );
+          setUserSubscriptions(ids);
+        })
+        .catch((err) =>
+          console.error('Ошибка подписок:', err)
+        );
     }
 
     const handleCourseCreated = () => {
@@ -1640,78 +1761,119 @@ function App() {
       loadCourses();
     };
 
-    window.addEventListener('courseCreated', handleCourseCreated);
+    window.addEventListener(
+      'courseCreated',
+      handleCourseCreated
+    );
 
     return () => {
-      window.removeEventListener('courseCreated', handleCourseCreated);
+      window.removeEventListener(
+        'courseCreated',
+        handleCourseCreated
+      );
     };
   }, []);
 
   return (
-  <>
-    <style>{`
-      * {
-        box-sizing: border-box;
-      }
-      
-      @media (max-width: 768px) {
-        html, body, #root {
-          overflow-x: hidden !important;
-          width: 100% !important;
+    <>
+      <style>{`
+        * {
+          box-sizing: border-box;
         }
         
-        div:has(iframe[src*="kinescope.io"]) {
-          width: 100vw !important;
-          margin-left: calc(50% - 50vw) !important;
-          margin-right: calc(50% - 50vw) !important;
+        @media (max-width: 768px) {
+          html, body, #root {
+            overflow-x: hidden !important;
+            width: 100% !important;
+          }
+          
+          div:has(iframe[src*="kinescope.io"]) {
+            width: 100vw !important;
+            margin-left: calc(50% - 50vw) !important;
+            margin-right: calc(50% - 50vw) !important;
+          }
         }
-      }
-    `}</style>
-    
-    <Router>
-      <div
-        style={{
-          minHeight: '100vh',
-          background: '#0f172a',
-          userSelect: 'none',
-          WebkitUserSelect: 'none',
-          MozUserSelect: 'none',
-          msUserSelect: 'none'
-        }}
-      >
-        <Header />
-        <Routes>
-          <Route path="/payment-success" element={
-            <div style={{padding: '40px', textAlign: 'center', color: '#22c55e'}}>
-              <h1>✅ Оплата успешна!</h1>
-              <p>Подписка активирована. <Link to="/">Вернуться к курсам</Link></p>
-            </div>
-          } />
+      `}</style>
 
-          <Route path="/my-courses" element={<MyCoursesPage />} />
-          <Route path="/courses/:id/manage" element={<CourseManagePage />} />
-          <Route path="/auth" element={<AuthPage />} />
-          
-          <Route
-            path="/"
-            element={<Home courses={courses} userSubscriptions={userSubscriptions} loading={loading} />}
-          />
-          
-          <Route path="/courses/:id" element={<CourseDetails />} />
-          <Route path="/create-course" element={<CreateCoursePage />} />
-          <Route
-            path="/about"
-            element={
-              <div style={{ padding: 40, color: 'white' }}>О нас</div>
-            }
-          />
-        </Routes>
-      </div>
-    </Router>
-  </>
-);
+      <Router>
+        <div
+          style={{
+            minHeight: '100vh',
+            background: '#0f172a',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            MozUserSelect: 'none',
+            msUserSelect: 'none'
+          }}
+        >
+          <Header />
+          <Routes>
+            <Route
+              path="/payment-success"
+              element={
+                <div
+                  style={{
+                    padding: '40px',
+                    textAlign: 'center',
+                    color: '#22c55e'
+                  }}
+                >
+                  <h1>✅ Оплата успешна!</h1>
+                  <p>
+                    Подписка активирована.{' '}
+                    <Link to="/">Вернуться к курсам</Link>
+                  </p>
+                </div>
+              }
+            />
 
+            <Route
+              path="/my-courses"
+              element={<MyCoursesPage />}
+            />
+            <Route
+              path="/courses/:id/manage"
+              element={<CourseManagePage />}
+            />
+            <Route path="/auth" element={<AuthPage />} />
+
+            <Route
+              path="/"
+              element={
+                <Home
+                  courses={courses}
+                  userSubscriptions={userSubscriptions}
+                  loading={loading}
+                />
+              }
+            />
+
+            <Route
+              path="/courses/:id"
+              element={<CourseDetails />}
+            />
+            <Route
+              path="/create-course"
+              element={<CreateCoursePage />}
+            />
+            <Route
+              path="/about"
+              element={
+                <div
+                  style={{
+                    padding: 40,
+                    color: 'white'
+                  }}
+                >
+                  О нас
+                </div>
+              }
+            />
+          </Routes>
+        </div>
+      </Router>
+    </>
+  );
 }
-
 
 export default App;

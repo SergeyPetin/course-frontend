@@ -14,12 +14,12 @@ const CourseCard = ({ course, isPurchased = false }) => {  // ← пропс isP
           display: 'flex',
           flexDirection: 'column',
           border: isPurchased 
-            ? '2px solid #22c55e'  // зелёная рамка ✅
+            ? '2px solid #22c55e'
             : '1px solid rgba(148,163,184,0.2)',
           transition: 'all 0.3s ease',
           cursor: 'pointer',
           overflow: 'hidden',
-          position: 'relative'  // ← для бейджа
+          position: 'relative'
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-4px)';

@@ -122,7 +122,12 @@ function CourseManagePage() {
         minHeight: '100vh'
       }}
     >
-      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+      <div style={{  width: '100%',
+    maxWidth: 960,
+    margin: '0 auto',
+    boxSizing: 'border-box',
+    color: 'white',
+    padding: '0 20px'}}>
         <Link
           to={`/courses/${id}`}
           style={{
