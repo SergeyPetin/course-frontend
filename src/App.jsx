@@ -476,6 +476,7 @@ function CourseDetails() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [isAuthor, setIsAuthor] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const parseJwtInline = (token) => {
     try {
@@ -739,15 +740,15 @@ function CourseDetails() {
         }}
       >
         <div
-          style={{
-            width: '100%',
-            maxWidth: 1000,
-            margin: '0 auto',
-            color: 'white',
-            padding: '0 20px',
-            boxSizing: 'border-box'
-          }}
-        >
+  style={{
+    width: '100%',
+    maxWidth: 1000,
+    margin: '0 auto',
+    color: 'white',
+    padding: '0 16px',
+    boxSizing: 'border-box'
+  }}
+>
           <Link
             to="/"
             style={{
@@ -804,16 +805,40 @@ function CourseDetails() {
               </div>
 
               <p
-                style={{
-                  fontSize: 16,
-                  color: '#9ca3af',
-                  lineHeight: 1.7,
-                  marginBottom: 32
-                }}
-              >
-                {course.description ||
-                  'Подробное описание курса будет добавлено в ближайшее время.'}
-              </p>
+  style={{
+    fontSize: 16,
+    color: '#9ca3af',
+    lineHeight: 1.7,
+    marginBottom: 16,
+    maxWidth: '100%',
+    wordWrap: 'break-word',
+    overflowWrap: 'anywhere',
+    display: '-webkit-box',
+    WebkitBoxOrient: 'vertical',
+    WebkitLineClamp: isDescriptionExpanded ? 'unset' : 10,
+    overflow: isDescriptionExpanded ? 'visible' : 'hidden'
+  }}
+>
+  {course.description}
+</p>
+
+{course.description && course.description.length > 0 && (
+  <button
+    onClick={() => setIsDescriptionExpanded(prev => !prev)}
+    style={{
+      background: 'transparent',
+      border: 'none',
+      color: '#38bdf8',
+      fontSize: 14,
+      fontWeight: 500,
+      cursor: 'pointer',
+      padding: 0,
+      marginBottom: 24
+    }}
+  >
+    {isDescriptionExpanded ? 'Свернуть' : 'Показать полностью'}
+  </button>
+)}
 
               {course.previewVideoUrl && (
                 <div style={{ marginBottom: 32 }}>
