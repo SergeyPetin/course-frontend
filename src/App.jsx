@@ -1359,12 +1359,12 @@ function CreateCoursePage() {
         : `${API_URL}/courses`;
 
       const body = {
-        title: formData.title,
-        description: formData.description,
-        price: Number(formData.price),
-        coverImageUrl: formData.coverImageUrl || '',
-        previewVideoUrl: formData.previewVideoUrl || ''
-      };
+  title: formData.title,
+  description: formData.description,
+  price: Number(formData.price),
+  coverImageUrl: formData.coverImageUrl || '',
+  previewVideoUrl: formData.previewVideoId || ''
+};
 
       const response = await fetch(url, {
         method,
@@ -1634,18 +1634,18 @@ function CreateCoursePage() {
                 marginBottom: 8
               }}
             >
-              YouTube видео (URL)
+              Kinescope видео (ID)
             </label>
             <input
-              type="url"
-              placeholder="https://youtube.com/watch?v=..."
-              value={formData.previewVideoUrl}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  previewVideoUrl: e.target.value
-                })
-              }
+  type="text"
+  placeholder="Например: cWuNZeXmxmAYyXyzZaZ6Vu"
+  value={formData.previewVideoId}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      previewVideoId: e.target.value
+    })
+  }
               style={{
                 width: '100%',
                 padding: '14px 16px',
