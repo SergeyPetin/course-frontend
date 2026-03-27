@@ -730,6 +730,8 @@ function CourseDetails() {
     );
   }
 
+  const previewVideoId = course?.previewVideoUrl || null;
+
   return (
     <>
       <div
@@ -840,30 +842,11 @@ function CourseDetails() {
   </button>
 )}
 
-              {course.previewVideoUrl && (
-                <div style={{ marginBottom: 32 }}>
-                  <iframe
-                    key={`${course.id}-${
-                      course.previewVideoUrl || 'empty'
-                    }-${Date.now()}`}
-                    width="100%"
-                    height="315"
-                    src={
-                      course.previewVideoUrl
-                        ? course.previewVideoUrl.replace(
-                            'watch?v=',
-                            'embed/'
-                          ) + `?v=${Date.now()}`
-                        : ''
-                    }
-                    title="Промо видео"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    style={{ borderRadius: 12 }}
-                  ></iframe>
-                </div>
-              )}
+              {previewVideoId && (
+<div style={{ marginBottom: 32 }}>
+<LessonPlayer videoId={previewVideoId} />
+</div>
+)}
 
               {canViewLessons &&
                 selectedLesson &&
@@ -1797,25 +1780,6 @@ function App() {
 
   return (
     <>
-      <style>{`
-        * {
-          box-sizing: border-box;
-        }
-        
-        @media (max-width: 768px) {
-          html, body, #root {
-            overflow-x: hidden !important;
-            width: 100% !important;
-          }
-          
-          div:has(iframe[src*="kinescope.io"]) {
-            width: 100vw !important;
-            margin-left: calc(50% - 50vw) !important;
-            margin-right: calc(50% - 50vw) !important;
-          }
-        }
-      `}</style>
-
       <Router>
         <div
           style={{
