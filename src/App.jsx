@@ -14,7 +14,7 @@ import CourseManagePage from './components/CourseManagePage';
 import CourseCard from './components/CourseCard';
 import MyCoursesPage from './components/MyCoursesPage';
 
-const API_URL = 'https://bek-production-15ec.up.railway.app';
+const API_URL = 'https://bek-production-d38b.up.railway.app';
 
 function parseJwt(token) {
   if (!token) return null;

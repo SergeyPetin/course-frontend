@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://bek-production-15ec.up.railway.app';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://bek-production-d38b.up.railway.app';
 
 fetch(`${API_BASE}${endpoint}`)
 

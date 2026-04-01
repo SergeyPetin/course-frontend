@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import LessonPlayer from '../components/LessonPlayer';
 
-const API_URL = 'https://bek-production-15ec.up.railway.app';
+const API_URL = 'https://bek-production-d38b.up.railway.app';
 
 function CourseManagePage() {
   const { id } = useParams();

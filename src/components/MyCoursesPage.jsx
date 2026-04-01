@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import CourseCard from './CourseCard';
 
-const API_URL = 'https://bek-production-15ec.up.railway.app';
+const API_URL = 'https://bek-production-d38b.up.railway.app';
 
 function MyCoursesPage() {
   const [allCourses, setAllCourses] = useState([]);
